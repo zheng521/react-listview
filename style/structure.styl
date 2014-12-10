@@ -1,0 +1,72 @@
+.z-listview
+
+    &
+    & *
+        box-sizing border-box
+
+    display flex
+    flex-direction column
+
+    .z-title
+        flex none
+
+    .z-body
+        flex 1
+        position relative
+        display flex
+        align-items stretch
+        flex-flow column
+
+    //we need this rule for IE, since when we configure the list with
+    //height: 'auto' IE hits a bug and really needs this rule
+    &.z-auto-height
+        .z-body
+            flex 1 0 auto
+
+    .z-list-wrap
+        position relative
+        width 100%
+        overflow auto
+
+    .z-scroller
+        width 100%
+        position relative
+
+    //style for the sort icon
+    .z-icon-sort-info
+        display inline-block
+        size 0px
+        margin-left 10px
+        border-left $z-listview-sort-icon-width solid transparent
+        border-right $z-listview-sort-icon-width solid transparent
+
+    .z-drag-handle
+        cursor move
+        position absolute
+        right 5px
+        width 15px
+        height 20px
+        display none
+
+    .z-list
+        margin 0px
+        padding 0px
+        background white
+        list-style-type none
+        position relative
+
+    &.z-with-handles.z-draggable
+        .z-row
+            &.z-over
+            &.z-row-drag-over
+                .z-drag-handle
+                    display inline-block
+
+    &.z-empty
+        .z-list-wrap
+            flex 1
+            display flex
+            align-items center
+
+        .z-row-empty
+            text-align center

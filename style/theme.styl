@@ -1,0 +1,59 @@
+.z-listview
+
+    .z-title
+        padding $z-listview-title-padding
+        background $z-listview-title-background
+        border-bottom $z-listview-title-border-width $z-listview-title-border-style $z-listview-title-border-color
+        font-weight $z-listview-title-font-weight
+        @extend .u-unselectable
+
+    &.z-asc
+        .z-icon-sort-info
+            border-bottom $z-listview-sort-icon-height solid $z-listview-sort-icon-color
+
+    &.z-desc
+        .z-icon-sort-info
+            border-top $z-listview-sort-icon-height solid $z-listview-sort-icon-color
+
+    .z-row
+        list-style-type none
+        padding $z-listview-row-padding
+        border-bottom $z-listview-row-border-width $z-listview-row-border-style $z-listview-row-border-color
+        cursor $z-listview-row-cursor
+
+        &.z-last
+            border-bottom 0px
+
+        &.z-over
+            background $z-listview-row-over-background
+
+        &.z-selected
+            background $z-listview-row-selected-background
+
+        &.z-row-clone
+            background rgba(168, 168, 168, 0.63)
+            width 100%
+
+        &.z-row-drag-over
+            background rgba(128, 128, 128, 0.56)
+
+    .z-title
+    .z-row
+        @extend .u-ellipsis
+
+    .z-drag-handle
+        background-color gray
+        background-image linear-gradient(transparent 50%, $z-listview-row-over-background 50%)
+        background-size 6px 8px
+
+    &.z-dragging
+        cursor move
+        .z-row
+            cursor move
+            .z-drag-handle
+                background-image linear-gradient(transparent 50%, white 50%)
+
+    &.z-empty
+        .z-list
+            font-style italic
+            color gray
