@@ -1,0 +1,29 @@
+{
+  "name": "react-listview",
+  "version": "0.1.0",
+  "description": "React ListView",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "make"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/radubrehar/react-listview.git"
+  },
+  "keywords": [
+    "list",
+    "listview",
+    "list-view",
+    "ui",
+    "widget",
+    "react-component",
+    "react",
+    "react-view"
+  ],
+  "author": "Radu Brehar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/radubrehar/react-listview/issues"
+  },
+  "homepage": "https://github.com/radubrehar/react-listview"
+}
