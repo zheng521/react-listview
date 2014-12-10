@@ -69,6 +69,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    React.PropTypes.string
 	])
 
+	function emptyFn(){}
+
 	module.exports = React.createClass({
 
 	    displayName: 'ReactListView',
@@ -84,11 +86,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        loadingText: React.PropTypes.string,
 
 	        idProperty: React.PropTypes.string,
-	        displayProperty: React.PropTypes.string
+	        displayProperty: React.PropTypes.string,
+	        selected: React.PropTypes.object
 	    },
 
 	    getDefaultProps: function() {
 	        return {
+	            rowBoundMethods: {
+	                onRowMouseDown: 'onMouseDown',
+	                onRowMouseUp  : 'onMouseup'
+	            },
+
+	            selectRowOnClick: true,
 	            idProperty: 'id',
 	            displayProperty: 'text',
 	            emptyText: 'No records',
@@ -98,6 +107,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            defaultStyle: {},
 	            defaultListStyle: {}
+	        }
+	    },
+
+	    getInitialState: function() {
+	        return {
+
 	        }
 	    },
 
@@ -265,6 +280,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            text = props.renderText(text, item, index, props)
 	        }
 
+	        var rowClassName = ''
+
+	        if (props.selected && props.selected[key]){
+	            rowClassName += ' z-selected'
+	        }
+
 	        var rowProps = {
 	            key     : key,
 	            style   : props.rowStyle,
@@ -272,10 +293,64 @@ return /******/ (function(modules) { // webpackBootstrap
 	            first   : index === 0,
 	            last    : index === arr.length - 1,
 	            item    : item,
+	            className: rowClassName,
+	            onClick : this.handleRowClick.bind(this, item, index, props),
 	            children: text
 	        }
 
+	        this.bindRowMethods(props, rowProps, props.rowBoundMethods, item, index)
+
+	        rowProps.className = this.prepareRowClassName(rowProps, this.state)
+
 	        return (props.rowFactory || RowFactory)(rowProps)
+	    },
+
+	    bindRowMethods: function(props, rowProps, bindMethods, item, index) {
+	        Object.keys(bindMethods).forEach(function(key){
+	            var eventName = bindMethods[key]
+
+	            if (props[key]){
+	                rowProps[eventName] = props[key].bind(this, item, index, props)
+	            }
+	        }, this)
+	    },
+
+	    prepareRowClassName: function(rowProps, state) {
+	        var index = rowProps.index
+
+	        var className = (rowProps.className || '') + ' z-row'
+
+	        if (index % 2){
+	            className += ' z-odd'
+	        } else {
+	            className += ' z-even'
+	        }
+
+	        if (rowProps.first){
+	            className += ' z-first'
+	        }
+
+	        if (rowProps.last){
+	            className += ' z-last'
+	        }
+
+	        return className
+	    },
+
+	    handleRowClick: function(item, index, props, event) {
+
+	        if (props.selectRowOnClick){
+	            var key         = item[props.idProperty]
+	            var selected    = props.selected || {}
+	            var rowSelected = !!selected[key]
+
+	            var fn = rowSelected? 'onDeselect': 'onSelect'
+
+	            ;(props[fn] || emptyFn)(key, item, index, selected, props)
+	            ;(props.onSelectionChange || emptyFn)(key, item, index, selected, props)
+	        }
+
+	        ;(props.onRowClick || emptyFn)(item, index, props, event)
 	    }
 	})
 
@@ -360,24 +435,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    prepareClassName: function(props, state) {
 	        var index = props.index
 
-	        var className = (props.className || '') + ' z-row'
-
-	        if (index % 2){
-	            className += ' z-odd'
-	        } else {
-	            className += ' z-even'
-	        }
+	        var className = props.className || ''
 
 	        if (state.mouseOver){
 	            className += ' z-over'
-	        }
-
-	        if (props.first){
-	            className += ' z-first'
-	        }
-
-	        if (props.last){
-	            className += ' z-last'
 	        }
 
 	        return className

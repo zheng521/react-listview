@@ -39,9 +39,17 @@ var gen = (function(){
 
 var VALUE = 90
 var LEN = 50
+var SELECTED = {}
+var initial = true
 
 var App = React.createClass({
 
+    handleSelect: function(key) {
+        SELECTED = {}
+        SELECTED[key] = true
+
+        this.setState({})
+    },
 
     render: function() {
 
@@ -58,9 +66,22 @@ var App = React.createClass({
 
         var data = gen(LEN)
 
+        var selected = SELECTED
+
+        if (initial){
+            initial = false
+            data.forEach(function(item, index){
+                if (index % 5 === 0){
+                    selected[item.id] = true
+                }
+            })
+        }
+
         return (
             <div className="App" style={{padding: 10}}>
                 <ListView
+                    onSelect={this.handleSelect}
+                    selected={selected}
                     data={data} title="React List View" style={style}/>
             </div>
         )

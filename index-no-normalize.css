@@ -499,7 +499,10 @@ html.u-app body * {
   background: #d7e7ff;
 }
 .z-listview .z-row.z-selected {
-  background: #ddebff;
+  background: #e1edff;
+}
+.z-listview .z-row.z-selected.z-over {
+  background: #c0d9ff;
 }
 .z-listview .z-row.z-row-clone {
   background: rgba(168,168,168,0.63);
