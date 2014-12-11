@@ -41,6 +41,7 @@ var VALUE = 90
 var LEN = 50
 var SELECTED = {}
 var initial = true
+var SORT_DIR = 1
 
 var App = React.createClass({
 
@@ -48,6 +49,11 @@ var App = React.createClass({
         SELECTED = {}
         SELECTED[key] = true
 
+        this.setState({})
+    },
+
+    handleSortChange: function(dir){
+        SORT_DIR = dir
         this.setState({})
     },
 
@@ -80,6 +86,8 @@ var App = React.createClass({
         return (
             <div className="App" style={{padding: 10}}>
                 <ListView
+                    sortDirection={SORT_DIR}
+                    onSortChange={this.handleSortChange}
                     onSelect={this.handleSelect}
                     selected={selected}
                     data={data} title="React List View" style={style}/>

@@ -918,6 +918,7 @@ html.u-app body * {
   list-style-type: none;
   padding: 5px;
   border-bottom: 1px dotted #a8a8a8;
+  border-right: 1px dotted #a8a8a8;
   cursor: default;
 }
 .z-listview .z-row.z-last {

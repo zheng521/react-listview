@@ -77,17 +77,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    propTypes: {
 	        renderText: React.PropTypes.func,
-	        title: stringOrNumber,
-	        rowHeight: stringOrNumber,
+	        title     : stringOrNumber,
+	        rowHeight : stringOrNumber,
 
-	        data: React.PropTypes.array,
-	        loading: React.PropTypes.bool,
-	        emptyText: React.PropTypes.string,
+	        data       : React.PropTypes.array,
+	        loading    : React.PropTypes.bool,
+	        emptyText  : React.PropTypes.string,
 	        loadingText: React.PropTypes.string,
 
-	        idProperty: React.PropTypes.string,
+	        idProperty     : React.PropTypes.string,
 	        displayProperty: React.PropTypes.string,
-	        selected: React.PropTypes.object
+	        selected       : React.PropTypes.object,
+
+	        sortable     : React.PropTypes.bool,
+	        sortDirection: stringOrNumber,
+	        toggleSort   : React.PropTypes.func
 	    },
 
 	    getDefaultProps: function() {
@@ -96,6 +100,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                onRowMouseDown: 'onMouseDown',
 	                onRowMouseUp  : 'onMouseup'
 	            },
+
+	            sortable: true,
 
 	            selectRowOnClick: true,
 	            idProperty: 'id',
@@ -111,9 +117,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    getInitialState: function() {
-	        return {
-
-	        }
+	        return {}
 	    },
 
 	    render: function() {
@@ -136,11 +140,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var props = assign({}, thisProps)
 
-	        props.style       = this.prepareStyle(props)
-	        props.titleStyle = this.prepareTitleStyle(props)
-	        props.bodyStyle   = this.prepareBodyStyle(props)
+	        props.style         = this.prepareStyle(props)
+	        props.titleStyle    = this.prepareTitleStyle(props)
+	        props.bodyStyle     = this.prepareBodyStyle(props)
 	        props.listWrapStyle = this.prepareListWrapStyle(props)
-	        props.rowStyle    = this.prepareRowStyle(props)
+	        props.rowStyle      = this.prepareRowStyle(props)
 
 	        props.className = this.prepareClassName(props)
 
@@ -164,6 +168,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (!this.getCount(props)){
 	            className += ' z-empty'
 	        }
+
+	        var sortableCls = props.sortable?
+	                            ' z-sortable':
+	                            ''
+	        if (props.sortable && props.sortDirection){
+	            sortableCls += props.sortDirection === 'asc' || props.sortDirection === 1?
+	                                ' z-asc':
+	                                props.sortDirection === 'desc' || props.sortDirection === -1?
+	                                    ' z-desc':
+	                                    ''
+	        }
+
+	        className += sortableCls
 
 	        return className
 	    },
@@ -207,7 +224,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (props.title){
 	            return (props.titleFactory || TitleFactory)({
 	                style    : props.titleStyle,
-	                className: (props.titleClassName || '') + ' z-title'
+	                className: (props.titleClassName || '') + ' z-title',
+	                onClick: this.handleTitleClick.bind(this, props)
 	            }, props.title, this.renderTitleSort(props))
 	        }
 	    },
@@ -246,6 +264,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return props.data?
 	                    props.data.length:
 	                    0
+	    },
+
+	    handleTitleClick: function(props, event){
+	        if (props.sortable){
+	            ;(props.toggleSort || this.toggleSort)(props)
+	        }
+	    },
+
+	    toggleSort: function(props){
+	        var dir = props.sortDirection === 'asc'?
+	                    1:
+	                    props.sortDirection === 'desc'?
+	                        -1:
+	                        props.sortDirection
+
+	        var newDir
+	        if (dir != 1 && dir != -1){
+	            newDir = 1
+	        } else {
+	            newDir = dir === 1? -1: dir === -1?  0: 1
+	        }
+
+	        ;(props.onSortChange || emptyFn)(newDir, props)
 	    },
 
 	    renderList: function(props) {
