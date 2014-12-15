@@ -37,7 +37,7 @@ module.exports = React.createClass({
 
         var className = props.className || ''
 
-        if (state.mouseOver){
+        if (state.mouseOver || props.mouseOver){
             className += ' z-over'
         }
 

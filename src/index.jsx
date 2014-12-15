@@ -15,6 +15,23 @@ var stringOrNumber = React.PropTypes.oneOfType([
 
 function emptyFn(){}
 
+function scrollToRowIfNeeded(row, parentNode, scrollConfig){
+    parentNode       = parentNode || row.parentNode
+    var scrollTop    = parentNode.scrollTop
+    var parentHeight = parentNode.offsetHeight
+    var scrollBottom = scrollTop + parentHeight
+    var rowTop       = row.offsetTop// + scrollTop
+    var rowBottom    = rowTop + row.offsetHeight
+
+    if (rowTop < scrollTop || rowBottom > scrollBottom){
+        row.scrollIntoView(scrollConfig)
+
+        return true
+    }
+
+    return false
+}
+
 module.exports = React.createClass({
 
     displayName: 'ReactListView',
@@ -23,6 +40,7 @@ module.exports = React.createClass({
         renderText: React.PropTypes.func,
         title     : stringOrNumber,
         rowHeight : stringOrNumber,
+        rowStyle  : React.PropTypes.object,
 
         data       : React.PropTypes.array,
         loading    : React.PropTypes.bool,
@@ -38,16 +56,53 @@ module.exports = React.createClass({
         toggleSort   : React.PropTypes.func
     },
 
+    scrollToRow: function(row) {
+        if (row){
+            return scrollToRowIfNeeded.call(this, row, this.refs.listWrap.getDOMNode())
+        }
+    },
+
+    scrollToRowById: function(id) {
+        this.scrollToRow(this.findRowById(id))
+    },
+
+    scrollToRowByIndex: function(index) {
+        this.scrollToRow(this.findRowByIndex(index))
+
+    },
+
+    findRowByIndex: function(index) {
+        var item = this.props.data[index]
+
+        if (!item){
+            return
+        }
+
+        var id = item[this.props.idProperty]
+
+        return this.findRowById(id)
+    },
+
+    findRowById: function(id) {
+        if (this.isMounted()){
+            return this.getDOMNode().querySelector('[data-row-id="' + id + '"]')
+        }
+    },
+
     getDefaultProps: function() {
         return {
             rowBoundMethods: {
                 onRowMouseDown: 'onMouseDown',
-                onRowMouseUp  : 'onMouseup'
+                onRowMouseUp  : 'onMouseUp',
+                onRowClick    : 'onClick',
+                onRowMouseOver: 'onMouseOver',
+                onRowMouseOut : 'onMouseOut'
             },
 
             sortable: true,
 
             selectRowOnClick: true,
+
             idProperty: 'id',
             displayProperty: 'text',
             emptyText: 'No records',
@@ -71,6 +126,12 @@ module.exports = React.createClass({
         var body  = this.renderBody(props)
 
         props.data = null
+
+        if (props.scrollToIndex){
+            setTimeout(function(){
+                this.scrollToRow(props.scrollToIndex)
+            }.bind(this), 0)
+        }
 
         return (
             <div {...props}>
@@ -196,7 +257,7 @@ module.exports = React.createClass({
 
     renderListWrap: function(props) {
         return (
-            <div className="z-list-wrap" style={props.listWrapStyle}>
+            <div ref="listWrap" className="z-list-wrap" style={props.listWrapStyle}>
                 <div className="z-scroller">
                     {this.renderList(props)}
                 </div>
@@ -258,7 +319,7 @@ module.exports = React.createClass({
     },
 
     renderRow: function(props, item, index, arr) {
-        var key = item[props.idProperty]
+        var key  = item[props.idProperty]
         var text = item[props.displayProperty]
 
         if (typeof props.renderText == 'function'){
@@ -272,15 +333,16 @@ module.exports = React.createClass({
         }
 
         var rowProps = {
-            key     : key,
-            style   : props.rowStyle,
-            index   : index,
-            first   : index === 0,
-            last    : index === arr.length - 1,
-            item    : item,
+            key      : key,
+            style    : props.rowStyle,
+            'data-row-id': key,
+            index    : index,
+            first    : index === 0,
+            last     : index === arr.length - 1,
+            item     : item,
             className: rowClassName,
-            onClick : this.handleRowClick.bind(this, item, index, props),
-            children: text
+            onClick  : this.handleRowClick.bind(this, item, index, props),
+            children : text
         }
 
         this.bindRowMethods(props, rowProps, props.rowBoundMethods, item, index)

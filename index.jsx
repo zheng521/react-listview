@@ -43,6 +43,8 @@ var SELECTED = {}
 var initial = true
 var SORT_DIR = 1
 
+var SELECTED_INDEX = LEN - 10
+
 var App = React.createClass({
 
     handleSelect: function(key) {
@@ -54,6 +56,11 @@ var App = React.createClass({
 
     handleSortChange: function(dir){
         SORT_DIR = dir
+        this.setState({})
+    },
+
+    handleSelectedIndexChange: function(event) {
+        SELECTED_INDEX = event.target.value
         this.setState({})
     },
 
@@ -77,7 +84,7 @@ var App = React.createClass({
         if (initial){
             initial = false
             data.forEach(function(item, index){
-                if (index % 5 === 0){
+                if (index == SELECTED_INDEX){
                     selected[item.id] = true
                 }
             })
@@ -85,11 +92,13 @@ var App = React.createClass({
 
         return (
             <div className="App" style={{padding: 10}}>
+                <input value={SELECTED_INDEX} onChange={this.handleSelectedIndexChange}/>
                 <ListView
                     sortDirection={SORT_DIR}
                     onSortChange={this.handleSortChange}
                     onSelect={this.handleSelect}
                     selected={selected}
+                    scrollToIndex={SELECTED_INDEX}
                     data={data} title="React List View" style={style}/>
             </div>
         )
