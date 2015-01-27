@@ -399,7 +399,7 @@ module.exports = React.createClass({
             var eventName = bindMethods[key]
 
             if (props[key]){
-                rowProps[eventName] = props[key].bind(this, item, index, props)
+                rowProps[eventName] = props[key].bind(null, item, index, props)
             }
         }, this)
     },
