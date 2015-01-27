@@ -261,7 +261,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    prepareRowStyle: function(props) {
 
-	        var rowStyle = assign({}, props.defaultRowStyle, props.rowStyle, {
+	        var rowStyle = props.rowStyle
+
+	        if (typeof rowStyle === 'function'){
+	            rowStyle = null
+	        }
+	        var rowStyle = assign({}, props.defaultRowStyle, rowStyle, {
 	            height: props.rowHeight
 	        })
 
@@ -393,9 +398,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            rowClassName += ' z-over'
 	        }
 
+	        var rowStyle = props.rowStyle
+
 	        var rowProps = {
 	            key      : key,
-	            style    : props.rowStyle,
+	            style    : rowStyle,
 	            'data-row-id': key,
 	            index    : index,
 	            first    : index === 0,
@@ -404,6 +411,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            className: rowClassName,
 	            onClick  : this.handleRowClick.bind(this, item, index, props),
 	            children : text
+	        }
+
+	        if (typeof this.props.rowStyle == 'function'){
+	            assign(rowProps.rowStyle, this.props.rowStyle)
 	        }
 
 	        this.bindRowMethods(props, rowProps, props.rowBoundMethods, item, index)
@@ -415,7 +426,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	            rowProps.onMouseOut  = this.handleRowMouseOut.bind(this, item, index, props, key)
 	        }
 
-	        return (props.rowFactory || RowFactory)(rowProps)
+	        var defaultFactory = RowFactory
+	        var factory = props.rowFactory || defaultFactory
+
+	        var result = factory(rowProps)
+
+	        if (result === undefined){
+	            result = defaultFactory(rowProps)
+	        }
+
+	        return result
 	    },
 
 	    handleRowMouseOver: function(item, index, props, key){
