@@ -121,9 +121,10 @@ module.exports = React.createClass({
 
     render: function() {
 
+        var state = this.state
         var props = this.prepareProps(this.props)
-        var title = this.renderTitle(props)
-        var body  = this.renderBody(props)
+        var title = this.renderTitle(props, state)
+        var body  = this.renderBody(props, state)
 
         props.data = null
 
@@ -241,7 +242,7 @@ module.exports = React.createClass({
         }
     },
 
-    renderBody: function(props) {
+    renderBody: function(props, state) {
 
         var bodyClassName = props.bodyClassName || ''
 
@@ -249,17 +250,17 @@ module.exports = React.createClass({
 
         return (
             <div className={bodyClassName} style={props.bodyStyle}>
-                {this.renderListWrap(props)}
+                {this.renderListWrap(props, state)}
                 <LoadMask visible={props.loading} />
             </div>
         )
     },
 
-    renderListWrap: function(props) {
+    renderListWrap: function(props, state) {
         return (
             <div ref="listWrap" className="z-list-wrap" style={props.listWrapStyle}>
                 <div className="z-scroller">
-                    {this.renderList(props)}
+                    {this.renderList(props, state)}
                 </div>
             </div>
         )
@@ -294,7 +295,7 @@ module.exports = React.createClass({
         ;(props.onSortChange || emptyFn)(newDir, props)
     },
 
-    renderList: function(props) {
+    renderList: function(props, state) {
 
         var className = 'z-list'
         var count = this.getCount(props)
@@ -309,7 +310,7 @@ module.exports = React.createClass({
 
         return (
             <ul className={className} style={props.listTagStyle} >
-                {empty? this.renderEmpty(props): data.map(this.renderRow.bind(this, props))}
+                {empty? this.renderEmpty(props): data.map(this.renderRow.bind(this, props, state))}
             </ul>
         )
     },
@@ -318,7 +319,7 @@ module.exports = React.createClass({
         return <li className="z-row-empty">{props.loading? props.loadingText: props.emptyText}</li>
     },
 
-    renderRow: function(props, item, index, arr) {
+    renderRow: function(props, state, item, index, arr) {
         var key  = item[props.idProperty]
         var text = item[props.displayProperty]
 
@@ -330,6 +331,10 @@ module.exports = React.createClass({
 
         if (props.selected && props.selected[key]){
             rowClassName += ' z-selected'
+        }
+
+        if (state.mouseOverKey === key){
+            rowClassName += ' z-over'
         }
 
         var rowProps = {
@@ -349,7 +354,24 @@ module.exports = React.createClass({
 
         rowProps.className = this.prepareRowClassName(rowProps, this.state)
 
+        if (props.rowFactory){
+            rowProps.onMouseOver = this.handleRowMouseOver.bind(this, item, index, props, key)
+            rowProps.onMouseOut  = this.handleRowMouseOut.bind(this, item, index, props, key)
+        }
+
         return (props.rowFactory || RowFactory)(rowProps)
+    },
+
+    handleRowMouseOver: function(item, index, props, key){
+        this.setState({
+            mouseOverKey: key
+        })
+    },
+
+    handleRowMouseOut: function(item, index, props, key){
+        this.setState({
+            mouseOverKey: undefined
+        })
     },
 
     bindRowMethods: function(props, rowProps, bindMethods, item, index) {

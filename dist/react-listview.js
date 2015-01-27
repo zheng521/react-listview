@@ -71,6 +71,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function emptyFn(){}
 
+	function scrollToRowIfNeeded(row, parentNode, scrollConfig){
+	    parentNode       = parentNode || row.parentNode
+	    var scrollTop    = parentNode.scrollTop
+	    var parentHeight = parentNode.offsetHeight
+	    var scrollBottom = scrollTop + parentHeight
+	    var rowTop       = row.offsetTop// + scrollTop
+	    var rowBottom    = rowTop + row.offsetHeight
+
+	    if (rowTop < scrollTop || rowBottom > scrollBottom){
+	        row.scrollIntoView(scrollConfig)
+
+	        return true
+	    }
+
+	    return false
+	}
+
 	module.exports = React.createClass({
 
 	    displayName: 'ReactListView',
@@ -79,6 +96,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        renderText: React.PropTypes.func,
 	        title     : stringOrNumber,
 	        rowHeight : stringOrNumber,
+	        rowStyle  : React.PropTypes.object,
 
 	        data       : React.PropTypes.array,
 	        loading    : React.PropTypes.bool,
@@ -94,16 +112,53 @@ return /******/ (function(modules) { // webpackBootstrap
 	        toggleSort   : React.PropTypes.func
 	    },
 
+	    scrollToRow: function(row) {
+	        if (row){
+	            return scrollToRowIfNeeded.call(this, row, this.refs.listWrap.getDOMNode())
+	        }
+	    },
+
+	    scrollToRowById: function(id) {
+	        this.scrollToRow(this.findRowById(id))
+	    },
+
+	    scrollToRowByIndex: function(index) {
+	        this.scrollToRow(this.findRowByIndex(index))
+
+	    },
+
+	    findRowByIndex: function(index) {
+	        var item = this.props.data[index]
+
+	        if (!item){
+	            return
+	        }
+
+	        var id = item[this.props.idProperty]
+
+	        return this.findRowById(id)
+	    },
+
+	    findRowById: function(id) {
+	        if (this.isMounted()){
+	            return this.getDOMNode().querySelector('[data-row-id="' + id + '"]')
+	        }
+	    },
+
 	    getDefaultProps: function() {
 	        return {
 	            rowBoundMethods: {
 	                onRowMouseDown: 'onMouseDown',
-	                onRowMouseUp  : 'onMouseup'
+	                onRowMouseUp  : 'onMouseUp',
+	                onRowClick    : 'onClick',
+	                onRowMouseOver: 'onMouseOver',
+	                onRowMouseOut : 'onMouseOut'
 	            },
 
 	            sortable: true,
 
 	            selectRowOnClick: true,
+
 	            idProperty: 'id',
 	            displayProperty: 'text',
 	            emptyText: 'No records',
@@ -122,11 +177,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    render: function() {
 
+	        var state = this.state
 	        var props = this.prepareProps(this.props)
-	        var title = this.renderTitle(props)
-	        var body  = this.renderBody(props)
+	        var title = this.renderTitle(props, state)
+	        var body  = this.renderBody(props, state)
 
 	        props.data = null
+
+	        if (props.scrollToIndex){
+	            setTimeout(function(){
+	                this.scrollToRow(props.scrollToIndex)
+	            }.bind(this), 0)
+	        }
 
 	        return (
 	            React.createElement("div", React.__spread({},  props), 
@@ -236,7 +298,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    },
 
-	    renderBody: function(props) {
+	    renderBody: function(props, state) {
 
 	        var bodyClassName = props.bodyClassName || ''
 
@@ -244,17 +306,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        return (
 	            React.createElement("div", {className: bodyClassName, style: props.bodyStyle}, 
-	                this.renderListWrap(props), 
+	                this.renderListWrap(props, state), 
 	                React.createElement(LoadMask, {visible: props.loading})
 	            )
 	        )
 	    },
 
-	    renderListWrap: function(props) {
+	    renderListWrap: function(props, state) {
 	        return (
-	            React.createElement("div", {className: "z-list-wrap", style: props.listWrapStyle}, 
+	            React.createElement("div", {ref: "listWrap", className: "z-list-wrap", style: props.listWrapStyle}, 
 	                React.createElement("div", {className: "z-scroller"}, 
-	                    this.renderList(props)
+	                    this.renderList(props, state)
 	                )
 	            )
 	        )
@@ -289,7 +351,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        ;(props.onSortChange || emptyFn)(newDir, props)
 	    },
 
-	    renderList: function(props) {
+	    renderList: function(props, state) {
 
 	        var className = 'z-list'
 	        var count = this.getCount(props)
@@ -304,7 +366,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        return (
 	            React.createElement("ul", {className: className, style: props.listTagStyle}, 
-	                empty? this.renderEmpty(props): data.map(this.renderRow.bind(this, props))
+	                empty? this.renderEmpty(props): data.map(this.renderRow.bind(this, props, state))
 	            )
 	        )
 	    },
@@ -313,8 +375,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return React.createElement("li", {className: "z-row-empty"}, props.loading? props.loadingText: props.emptyText)
 	    },
 
-	    renderRow: function(props, item, index, arr) {
-	        var key = item[props.idProperty]
+	    renderRow: function(props, state, item, index, arr) {
+	        var key  = item[props.idProperty]
 	        var text = item[props.displayProperty]
 
 	        if (typeof props.renderText == 'function'){
@@ -327,23 +389,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	            rowClassName += ' z-selected'
 	        }
 
+	        if (state.mouseOverKey === key){
+	            rowClassName += ' z-over'
+	        }
+
 	        var rowProps = {
-	            key     : key,
-	            style   : props.rowStyle,
-	            index   : index,
-	            first   : index === 0,
-	            last    : index === arr.length - 1,
-	            item    : item,
+	            key      : key,
+	            style    : props.rowStyle,
+	            'data-row-id': key,
+	            index    : index,
+	            first    : index === 0,
+	            last     : index === arr.length - 1,
+	            item     : item,
 	            className: rowClassName,
-	            onClick : this.handleRowClick.bind(this, item, index, props),
-	            children: text
+	            onClick  : this.handleRowClick.bind(this, item, index, props),
+	            children : text
 	        }
 
 	        this.bindRowMethods(props, rowProps, props.rowBoundMethods, item, index)
 
 	        rowProps.className = this.prepareRowClassName(rowProps, this.state)
 
+	        if (props.rowFactory){
+	            rowProps.onMouseOver = this.handleRowMouseOver.bind(this, item, index, props, key)
+	            rowProps.onMouseOut  = this.handleRowMouseOut.bind(this, item, index, props, key)
+	        }
+
 	        return (props.rowFactory || RowFactory)(rowProps)
+	    },
+
+	    handleRowMouseOver: function(item, index, props, key){
+	        this.setState({
+	            mouseOverKey: key
+	        })
+	    },
+
+	    handleRowMouseOut: function(item, index, props, key){
+	        this.setState({
+	            mouseOverKey: undefined
+	        })
 	    },
 
 	    bindRowMethods: function(props, rowProps, bindMethods, item, index) {
@@ -478,7 +562,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var className = props.className || ''
 
-	        if (state.mouseOver){
+	        if (state.mouseOver || props.mouseOver){
 	            className += ' z-over'
 	        }
 
