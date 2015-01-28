@@ -57,12 +57,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** @jsx React.DOM */'use strict'
 
 	var React    = __webpack_require__(1)
-	var LoadMask = __webpack_require__(5)
+	var LoadMask = __webpack_require__(4)
 	var Title = __webpack_require__(2)
 	var TitleFactory = React.createFactory(Title)
 	var Row = __webpack_require__(3)
 	var RowFactory = React.createFactory(Row)
-	var assign   = __webpack_require__(4)
+	var assign   = __webpack_require__(5)
 
 	var stringOrNumber = React.PropTypes.oneOfType([
 	    React.PropTypes.number,
@@ -512,7 +512,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** @jsx React.DOM */'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(4)
+	var assign = __webpack_require__(5)
 
 	module.exports = React.createClass({
 
@@ -546,7 +546,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** @jsx React.DOM */'use strict'
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(4)
+	var assign = __webpack_require__(5)
 
 	module.exports = React.createClass({
 
@@ -608,40 +608,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	function ToObject(val) {
-		if (val == null) {
-			throw new TypeError('Object.assign cannot be called with null or undefined');
-		}
-
-		return Object(val);
-	}
-
-	module.exports = Object.assign || function (target, source) {
-		var from;
-		var keys;
-		var to = ToObject(target);
-
-		for (var s = 1; s < arguments.length; s++) {
-			from = arguments[s];
-			keys = Object.keys(Object(from));
-
-			for (var i = 0; i < keys.length; i++) {
-				to[keys[i]] = from[keys[i]];
-			}
-		}
-
-		return to;
-	};
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(4)
+	var assign = __webpack_require__(5)
 	var Loader = __webpack_require__(6)
 
 	module.exports = React.createClass({
@@ -690,13 +658,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	function ToObject(val) {
+		if (val == null) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var keys;
+		var to = ToObject(target);
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = arguments[s];
+			keys = Object.keys(Object(from));
+
+			for (var i = 0; i < keys.length; i++) {
+				to[keys[i]] = from[keys[i]];
+			}
+		}
+
+		return to;
+	};
+
+
+/***/ },
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(4)
+	var assign = __webpack_require__(5)
 
 	module.exports = React.createClass({
 
