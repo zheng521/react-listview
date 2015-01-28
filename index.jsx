@@ -100,7 +100,7 @@ var App = React.createClass({
                     sortDirection={SORT_DIR}
                     onSortChange={this.handleSortChange}
                     onSelect={this.handleSelect}
-                    defaultSelected={SELECTED}
+                    xdefaultSelected={SELECTED}
                     scrollToIndex={SELECTED_INDEX}
                     data={data} title="React List View" style={style}/>
             </div>
