@@ -2,16 +2,25 @@
 
 var React  = require('react')
 var assign = require('object-assign')
+var prefixer = require('react-prefixr')
 
 module.exports = React.createClass({
 
     displayName: 'ReactListView.Row',
 
+    getDefaultProps: function() {
+        return {
+            defaultStyle: {
+                userSelect: 'none'
+            }
+        }
+    },
+
     render: function() {
 
         var props = this.prepareProps(this.props, this.state)
 
-        return <li {...props} />
+        return <li {...props} data={null}/>
     },
 
     getInitialState: function() {
@@ -23,6 +32,7 @@ module.exports = React.createClass({
 
         assign(props, thisProps)
 
+        props.style = this.prepareStyle(props)
         props.onMouseOver = this.handleMouseOver
         props.onMouseOut  = this.handleMouseOut
 
@@ -30,6 +40,12 @@ module.exports = React.createClass({
 
         return props
 
+    },
+
+    prepareStyle: function(props) {
+        var style = assign({}, props.defaultStyle, props.style)
+
+        return prefixer(style)
     },
 
     prepareClassName: function(props, state) {

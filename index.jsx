@@ -39,11 +39,11 @@ var gen = (function(){
 
 var VALUE = 90
 var LEN = 50
-var SELECTED = {}
+var SELECTED
 var initial = true
 var SORT_DIR = 1
 
-var SELECTED_INDEX = LEN - 10
+var SELECTED_INDEX = 10// - 10
 
 var App = React.createClass({
 
@@ -85,10 +85,13 @@ var App = React.createClass({
             initial = false
             data.forEach(function(item, index){
                 if (index == SELECTED_INDEX){
-                    selected[item.id] = true
+                    SELECTED = item.id
+                    // selected[item.id] = true
                 }
             })
         }
+
+        console.log(SELECTED)
 
         return (
             <div className="App" style={{padding: 10}}>
@@ -97,7 +100,7 @@ var App = React.createClass({
                     sortDirection={SORT_DIR}
                     onSortChange={this.handleSortChange}
                     onSelect={this.handleSelect}
-                    selected={selected}
+                    defaultSelected={SELECTED}
                     scrollToIndex={SELECTED_INDEX}
                     data={data} title="React List View" style={style}/>
             </div>

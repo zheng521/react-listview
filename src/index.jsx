@@ -8,6 +8,8 @@ var Row = require('./Row')
 var RowFactory = React.createFactory(Row)
 var assign   = require('object-assign')
 
+var getSelected   = require('./getSelected')
+
 var stringOrNumber = React.PropTypes.oneOfType([
     React.PropTypes.number,
     React.PropTypes.string
@@ -35,6 +37,10 @@ function scrollToRowIfNeeded(row, parentNode, scrollConfig){
 module.exports = React.createClass({
 
     displayName: 'ReactListView',
+
+    mixins: [
+        require('./RowSelect')
+    ],
 
     propTypes: {
         renderText: React.PropTypes.func,
@@ -116,7 +122,9 @@ module.exports = React.createClass({
     },
 
     getInitialState: function() {
-        return {}
+        return {
+            defaultSelected: this.props.defaultSelected
+        }
     },
 
     render: function() {
@@ -313,9 +321,11 @@ module.exports = React.createClass({
 
         var data = props.data || []
 
+        var selected = getSelected(props, state)
+
         return (
             <ul className={className} style={props.listTagStyle} >
-                {empty? this.renderEmpty(props): data.map(this.renderRow.bind(this, props, state))}
+                {empty? this.renderEmpty(props): data.map(this.renderRow.bind(this, props, state, selected))}
             </ul>
         )
     },
@@ -324,7 +334,7 @@ module.exports = React.createClass({
         return <li className="z-row-empty">{props.loading? props.loadingText: props.emptyText}</li>
     },
 
-    renderRow: function(props, state, item, index, arr) {
+    renderRow: function(props, state, selected, item, index, arr) {
         var key  = item[props.idProperty]
         var text = item[props.displayProperty]
 
@@ -334,7 +344,16 @@ module.exports = React.createClass({
 
         var rowClassName = ''
 
-        if (props.selected && props.selected[key]){
+        var isSelected = false
+
+        if (typeof selected == 'object' && selected){
+            isSelected = !!selected[key]
+        } else if (selected != null){
+            isSelected = key === selected
+        }
+
+        if (isSelected){
+            this.selIndex = index
             rowClassName += ' z-selected'
         }
 
@@ -351,11 +370,12 @@ module.exports = React.createClass({
             index    : index,
             first    : index === 0,
             last     : index === arr.length - 1,
-            item     : item,
+            data     : item,
             className: rowClassName,
-            onClick  : this.handleRowClick.bind(this, item, index, props),
             children : text
         }
+
+        rowProps.onClick = this.handleRowClick.bind(this, item, index, rowProps, props)
 
         if (typeof this.props.rowStyle == 'function'){
             assign(rowProps.rowStyle, this.props.rowStyle)
@@ -426,19 +446,22 @@ module.exports = React.createClass({
         return className
     },
 
-    handleRowClick: function(item, index, props, event) {
+    handleRowClick: function(item, index, rowProps, props, event) {
 
-        if (props.selectRowOnClick){
-            var key         = item[props.idProperty]
-            var selected    = props.selected || {}
-            var rowSelected = !!selected[key]
+        // if (props.selectRowOnClick){
 
-            var fn = rowSelected? 'onDeselect': 'onSelect'
+        //     var key         = item[props.idProperty]
+        //     var selected    = props.selected || {}
+        //     var rowSelected = !!selected[key]
 
-            ;(props[fn] || emptyFn)(key, item, index, selected, props)
-            ;(props.onSelectionChange || emptyFn)(key, item, index, selected, props)
-        }
+        //     var fn = rowSelected? 'onDeselect': 'onSelect'
+
+        //     ;(props[fn] || emptyFn)(key, item, index, selected, props)
+        //     ;(props.onSelectionChange || emptyFn)(key, item, index, selected, props)
+        // }
 
         ;(props.onRowClick || emptyFn)(item, index, props, event)
+
+        this.handleSelection(rowProps, event)
     }
 })
