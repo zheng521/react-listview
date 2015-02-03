@@ -97,6 +97,7 @@ var App = React.createClass({
             <div className="App" style={{padding: 10}}>
                 <input value={SELECTED_INDEX} onChange={this.handleSelectedIndexChange}/>
                 <ListView
+                    loading={true}
                     sortDirection={SORT_DIR}
                     onSortChange={this.handleSortChange}
                     onSelect={this.handleSelect}

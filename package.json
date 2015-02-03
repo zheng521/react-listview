@@ -51,7 +51,7 @@
     "css-utils": "^1.0.0",
     "normalize.css": "^3.0.2",
     "object-assign": "^2.0.0",
-    "react": "^0.12.1",
+    "react": "^0.12.2",
     "react-load-mask": "radubrehar/react-load-mask",
     "react-style-normalizer": "^1.0.0"
   }
