@@ -57,28 +57,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** @jsx React.DOM */'use strict'
 
 	var React    = __webpack_require__(1)
-	var LoadMask = __webpack_require__(7)
+	var LoadMask = __webpack_require__(8)
+
 	var Title = __webpack_require__(2)
 	var TitleFactory = React.createFactory(Title)
+
 	var Row = __webpack_require__(3)
 	var RowFactory = React.createFactory(Row)
-	var assign   = __webpack_require__(6)
 
-	var getSelected   = __webpack_require__(4)
+	var sorty     = __webpack_require__(6)
+	var assign    = __webpack_require__(7)
+	var normalize = __webpack_require__(9)
 
-	var stringOrNumber = React.PropTypes.oneOfType([
-	    React.PropTypes.number,
-	    React.PropTypes.string
+	var getSelected = __webpack_require__(4)
+	var PropTypes   = React.PropTypes
+
+	var stringOrNumber = PropTypes.oneOfType([
+	    PropTypes.number,
+	    PropTypes.string
 	])
 
 	function emptyFn(){}
 
 	function scrollToRowIfNeeded(row, parentNode, scrollConfig){
 	    parentNode       = parentNode || row.parentNode
+
 	    var scrollTop    = parentNode.scrollTop
 	    var parentHeight = parentNode.offsetHeight
 	    var scrollBottom = scrollTop + parentHeight
-	    var rowTop       = row.offsetTop// + scrollTop
+	    var rowTop       = row.offsetTop
 	    var rowBottom    = rowTop + row.offsetHeight
 
 	    if (rowTop < scrollTop || rowBottom > scrollBottom){
@@ -90,35 +97,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return false
 	}
 
+	var DISPLAY_NAME = 'ReactListView'
+
 	module.exports = React.createClass({
 
-	    displayName: 'ReactListView',
+	    displayName: DISPLAY_NAME,
 
 	    mixins: [
 	        __webpack_require__(5)
 	    ],
 
 	    propTypes: {
-	        renderText: React.PropTypes.func,
+	        renderText: PropTypes.func,
 	        title     : stringOrNumber,
 	        rowHeight : stringOrNumber,
-	        rowStyle  : React.PropTypes.oneOf([
-	            React.PropTypes.object,
-	            React.PropTypes.func
+	        rowStyle  : PropTypes.oneOfType([
+	            PropTypes.object,
+	            PropTypes.func
 	        ]),
 
-	        data       : React.PropTypes.array,
-	        loading    : React.PropTypes.bool,
-	        emptyText  : React.PropTypes.string,
-	        loadingText: React.PropTypes.string,
+	        data       : PropTypes.array,
+	        loading    : PropTypes.bool,
+	        emptyText  : PropTypes.string,
+	        loadingText: PropTypes.string,
 
-	        idProperty     : React.PropTypes.string,
-	        displayProperty: React.PropTypes.string,
-	        selected       : React.PropTypes.object,
+	        idProperty     : PropTypes.string,
+	        displayProperty: PropTypes.string,
+	        selected       : PropTypes.oneOfType([
+	            PropTypes.object,
+	            PropTypes.string,
+	            PropTypes.number
+	        ]),
 
-	        sortable     : React.PropTypes.bool,
+	        sortable     : PropTypes.bool,
 	        sortDirection: stringOrNumber,
-	        toggleSort   : React.PropTypes.func
+	        toggleSort   : PropTypes.func
 	    },
 
 	    scrollToRow: function(row) {
@@ -137,7 +150,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    findRowByIndex: function(index) {
-	        var item = this.props.data[index]
+	        var item = this.data[index]
 
 	        if (!item){
 	            return
@@ -156,33 +169,151 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    getDefaultProps: function() {
 	        return {
+	            'data-display-name': DISPLAY_NAME,
+
 	            rowBoundMethods: {
-	                onRowMouseDown: 'onMouseDown',
-	                onRowMouseUp  : 'onMouseUp',
-	                onRowClick    : 'onClick',
-	                onRowMouseOver: 'onMouseOver',
-	                onRowMouseOut : 'onMouseOut'
+	                onRowMouseDown : 'onMouseDown',
+	                onRowMouseUp   : 'onMouseUp',
+	                onRowClick     : 'onClick',
+	                onRowMouseEnter: 'onMouseEnter',
+	                onRowMouseLeave: 'onMouseLeave',
+	                onRowMouseOver : 'onMouseOver',
+	                onRowMouseOut  : 'onMouseOut'
+	            },
+
+	            emptyTextStyle: {
+	                fontStyle: 'italic'
 	            },
 
 	            sortable: true,
 
 	            selectRowOnClick: true,
 
-	            idProperty: 'id',
+	            idProperty     : 'id',
 	            displayProperty: 'text',
-	            emptyText: 'No records',
-	            loadingText: '',
+	            emptyText      : 'No records',
+	            loadingText    : '',
 
 	            rowHeight: null,
 
-	            defaultStyle: {},
-	            defaultListStyle: {}
+	            defaultStyle: {
+	                display : 'flex',
+	                flexFlow: 'column',
+
+	                //theme props
+	                color: 'rgb(120, 120, 120)'
+	            },
+
+	            defaultTitleStyle: {
+	                userSelect: 'none',
+	                fontWeight: 'bold',
+	                padding: 5,
+	                background: 'linear-gradient(to bottom, #f7f7f7 0%,#efefef 13%,#e6e6e6 100%)',
+	                borderBottom: '1px solid #A8A8A8',
+
+	                //ellipsis
+	                whiteSpace: 'nowrap',
+	                overflow: 'hidden',
+	                textOverflow: 'ellipsis'
+	            },
+
+	            defaultListStyle: {},
+
+	            defaultRowStyle: {
+	                whiteSpace: 'nowrap',
+	                overflow: 'hidden',
+	                textOverflow: 'ellipsis',
+	                listStyleType: 'none',
+	                padding: 5,
+	                cursor: 'default'
+	            },
+
+	            rowBorder: '1px dotted #A8A8A8',
+
+	            //row props
+	            defaultSelectedRowStyle: {
+	                background: 'rgb(103, 175, 233)', //primary color
+	                color: 'white'
+	            },
+
+	            defaultOverRowStyle: {
+	                background: 'rgb(118, 181, 231)',
+	                color: 'white'
+	            },
+
+	            defaultOverSelectedRowStyle: {
+	                color: 'white',
+	                background: 'rgb(90, 152, 202)' //pressed color
+	            },
+
+	            defaultSortArrowStyle: {
+	                color: 'rgb(103, 175, 233)', //primary color
+	                margin: 5
+	            },
+
+	            defaultLastRowStyle: {
+	                borderBottom: 0
+	            }
 	        }
+	    },
+
+	    componentWillReceiveProps: function(){
+	        this.checkData(this.props)
+	    },
+
+	    componentWillMount: function(){
+	        this.checkData(this.props)
+	    },
+
+	    checkData: function(props) {
+	        var data = props.data
+	        var sortable = props.sortable && data && Array.isArray(data)
+
+	        if (sortable && this.state.defaultSortDirection != null){
+	            //if sorting should be done in state
+	            //then we have to do it here, to prevent sorting
+	            //on every state change
+
+	            this.setState({
+	                data: this.sort(data)
+	            })
+
+	        } else {
+	            this.setState({
+	                data: null
+	            })
+	        }
+	    },
+
+	    sort: function(data, sortDirection) {
+	        if (sortDirection === undefined){
+	            sortDirection = this.prepareSortDirection(this.props)
+	        }
+
+	        if (this.props.sortData){
+	            return this.props.sortData(data, sortDirection)
+	        }
+
+	        var sortInfo = {
+	            name: this.props.displayProperty,
+	            dir : sortDirection
+	        }
+
+	        if (this.props.sortType){
+	            sortInfo.type = this.props.sortType
+	        }
+
+	        if (this.props.sortFn){
+	            sortInfo.fn = props.sortFn
+	        }
+
+	        return sorty(sortInfo, [].concat(data))
 	    },
 
 	    getInitialState: function() {
 	        return {
-	            defaultSelected: this.props.defaultSelected
+	            defaultSelected: this.props.defaultSelected,
+	            defaultSortDirection: this.props.defaultSortDirection
 	        }
 	    },
 
@@ -193,8 +324,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var title = this.renderTitle(props, state)
 	        var body  = this.renderBody(props, state)
 
-	        props.data = null
-
 	        if (props.scrollToIndex){
 	            setTimeout(function(){
 	                this.scrollToRow(props.scrollToIndex)
@@ -202,7 +331,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        return (
-	            React.createElement("div", React.__spread({},  props), 
+	            React.createElement("div", React.__spread({},  props, {data: null}), 
 	                title, 
 	                body
 	            )
@@ -213,24 +342,67 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var props = assign({}, thisProps)
 
+	        props.sortDirection = this.prepareSortDirection(props)
+	        this.data = props.data = this.prepareData(props)
+
+	        props.count = this.data.length
+
 	        props.style         = this.prepareStyle(props)
 	        props.titleStyle    = this.prepareTitleStyle(props)
 	        props.bodyStyle     = this.prepareBodyStyle(props)
 	        props.listWrapStyle = this.prepareListWrapStyle(props)
 	        props.rowStyle      = this.prepareRowStyle(props)
+	        props.sortArrowStyle = this.prepareSortArrowStyle(props)
 
 	        props.className = this.prepareClassName(props)
 
 	        return props
 	    },
 
+	    prepareSortDirection: function(props) {
+	        var sortDirection = props.sortDirection
+
+	        if (sortDirection == null){
+	            sortDirection = this.state.defaultSortDirection
+	        }
+
+	        var dir = sortDirection === 'asc'?
+	                    1:
+	                    sortDirection === 'desc'?
+	                        -1:
+	                        sortDirection
+
+	        return dir
+	    },
+
+	    prepareData: function(props) {
+	        var data = this.state.data || props.data
+
+	        if (!data || !Array.isArray(data)){
+	            data = []
+	        }
+
+	        return data
+	    },
+
+	    prepareSortArrowStyle: function(props) {
+	        var style = assign({}, props.defaultSortArrowStyle, props.sortArrowStyle)
+
+	        return style
+	    },
+
 	    prepareStyle: function(props) {
 
 	        var style = {}
+	        var emptyStyle
 
-	        assign(style, props.defaultStyle, props.style)
+	        if (!props.count){
+	            emptyStyle = props.emptyStyle
+	        }
 
-	        return style
+	        assign(style, props.defaultStyle, props.style, emptyStyle)
+
+	        return normalize(style)
 	    },
 
 	    prepareClassName: function(props) {
@@ -238,7 +410,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        className += ' z-listview'
 
-	        if (!this.getCount(props)){
+	        if (!props.count){
 	            className += ' z-empty'
 	        }
 
@@ -246,9 +418,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            ' z-sortable':
 	                            ''
 	        if (props.sortable && props.sortDirection){
-	            sortableCls += props.sortDirection === 'asc' || props.sortDirection === 1?
+	            sortableCls += props.sortDirection === 1?
 	                                ' z-asc':
-	                                props.sortDirection === 'desc' || props.sortDirection === -1?
+	                                props.sortDirection === -1?
 	                                    ' z-desc':
 	                                    ''
 	        }
@@ -261,13 +433,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    prepareBodyStyle: function(props) {
 	        var bodyStyle = assign({}, props.defaultBodyStyle, props.bodyStyle)
 
-	        return bodyStyle
+	        return normalize(bodyStyle)
 	    },
 
 	    prepareTitleStyle: function(props) {
-	        var titleStyle = assign({}, props.defaultTitleStyle, props.titleStyle)
 
-	        return titleStyle
+	        var defaultTitleStyle = assign({}, props.defaultTitleStyle)
+
+	        if (props.sortable){
+	            defaultTitleStyle.cursor = 'pointer'
+	        }
+	        var titleStyle = assign({}, defaultTitleStyle, props.titleStyle)
+
+	        return normalize(titleStyle)
 	    },
 
 	    prepareRowStyle: function(props) {
@@ -278,11 +456,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	            rowStyle = null
 	        }
 
-	        var rowStyle = assign({}, props.defaultRowStyle, rowStyle, {
+	        var rowBorderStyle
+
+	        if (props.rowBorder){
+	            rowBorderStyle = {
+	                borderBottom: props.rowBorder,
+	                borderRight : props.rowBorder
+	            }
+	        }
+
+	        var rowStyle = assign({}, props.defaultRowStyle, rowBorderStyle, rowStyle, {
 	            height: props.rowHeight
 	        })
 
-	        return rowStyle
+	        return normalize(rowStyle)
 	    },
 
 	    prepareListWrapStyle: function(props) {
@@ -296,7 +483,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            maxWidth : props.listMaxWidth
 	        }, props.listStyle)
 
-	        return style
+	        return normalize(style)
 	    },
 
 	    renderTitle: function(props) {
@@ -304,14 +491,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return (props.titleFactory || TitleFactory)({
 	                style    : props.titleStyle,
 	                className: (props.titleClassName || '') + ' z-title',
-	                onClick: this.handleTitleClick.bind(this, props)
+	                onClick  : this.handleTitleClick.bind(this, props)
 	            }, props.title, this.renderTitleSort(props))
 	        }
 	    },
 
 	    renderTitleSort: function(props) {
+
 	        if (props.sortable !== false){
-	            return React.createElement("span", {className: "z-icon-sort-info"})
+	            var arrow = props.sortDirection == 1? '▲':
+	                            props.sortDirection == -1? '▼': null
+	            return React.createElement("span", {style: props.sortArrowStyle, className: "z-icon-sort-info"}, 
+	                arrow
+	            )
 	        }
 	    },
 
@@ -339,12 +531,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        )
 	    },
 
-	    getCount: function(props) {
-	        return props.data?
-	                    props.data.length:
-	                    0
-	    },
-
 	    handleTitleClick: function(props, event){
 	        if (props.sortable){
 	            ;(props.toggleSort || this.toggleSort)(props)
@@ -352,26 +538,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    toggleSort: function(props){
-	        var dir = props.sortDirection === 'asc'?
-	                    1:
-	                    props.sortDirection === 'desc'?
-	                        -1:
-	                        props.sortDirection
+	        var dir = props.sortDirection
+	        var newDir = dir != 1 && dir != -1?
+	                        1:
+	                        dir === 1? -1: dir === -1?  0: 1
 
-	        var newDir
-	        if (dir != 1 && dir != -1){
-	            newDir = 1
-	        } else {
-	            newDir = dir === 1? -1: dir === -1?  0: 1
+	        var onSortChange = function(){
+	            ;(props.onSortChange || emptyFn)(newDir, props)
 	        }
 
-	        ;(props.onSortChange || emptyFn)(newDir, props)
+	        if (this.props.sortDirection == null){
+	            this.setState({
+	                defaultSortDirection: newDir,
+	                data: this.sort(props.data, newDir)
+	            }, onSortChange)
+	            //since the onSortChange specified by the user could do setState
+	            //and defaultSortDirection is set async on the state,
+	            //it may end up not set correctly, therefore we only
+	            //call the user defined function after state has been updated
+	        } else {
+	            onSortChange()
+	        }
 	    },
 
 	    renderList: function(props, state) {
 
 	        var className = 'z-list'
-	        var count = this.getCount(props)
+	        var count = props.count
 	        var empty = false
 
 	        if (!count){
@@ -382,25 +575,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var data = props.data || []
 
 	        var selected = getSelected(props, state)
+	        var style = props.listTagStyle
+
+	        if (!count){
+	            style = assign({}, style, {
+	                textAlign: 'center'
+	            })
+	        }
 
 	        return (
-	            React.createElement("ul", {className: className, style: props.listTagStyle}, 
+	            React.createElement("ul", {className: className, style: style}, 
 	                empty? this.renderEmpty(props): data.map(this.renderRow.bind(this, props, state, selected))
 	            )
 	        )
 	    },
 
 	    renderEmpty: function(props) {
-	        return React.createElement("li", {className: "z-row-empty"}, props.loading? props.loadingText: props.emptyText)
+	        return React.createElement("li", {className: "z-row-empty", style: props.emptyTextStyle}, props.loading? props.loadingText: props.emptyText)
 	    },
 
 	    renderRow: function(props, state, selected, item, index, arr) {
 	        var key  = item[props.idProperty]
 	        var text = item[props.displayProperty]
-
-	        if (typeof props.renderText == 'function'){
-	            text = props.renderText(text, item, index, props)
-	        }
 
 	        var rowClassName = ''
 
@@ -417,26 +613,51 @@ return /******/ (function(modules) { // webpackBootstrap
 	            rowClassName += ' z-selected'
 	        }
 
-	        if (state.mouseOverKey === key){
+	        var mouseOver = state.mouseOverKey === index
+	        if (mouseOver){
 	            rowClassName += ' z-over'
 	        }
 
 	        var rowStyle = props.rowStyle
+
+	        if (isSelected){
+	            rowStyle = assign({}, rowStyle, props.defaultSelectedRowStyle, props.selectedRowStyle)
+	        }
+
+	        if (mouseOver){
+	            rowStyle = assign({}, rowStyle, props.defaultOverRowStyle, props.overRowStyle)
+	        }
+
+	        if (isSelected && mouseOver){
+	            assign(rowStyle, props.defaultOverSelectedRowStyle, props.overSelectedRowStyle)
+	        }
+
+	        var isFirst = index === 0
+	        var isLast  = index === arr.length - 1
+
+	        if (isLast){
+	            rowStyle = assign({}, rowStyle, props.defaultLastRowStyle, props.lastRowStyle)
+	        }
 
 	        var rowProps = {
 	            key      : key,
 	            style    : rowStyle,
 	            'data-row-id': key,
 	            index    : index,
-	            first    : index === 0,
-	            last     : index === arr.length - 1,
+	            first    : isFirst,
+	            last     : isLast,
 	            data     : item,
 	            className: rowClassName,
-	            children : text
+	            mouseOver: mouseOver
 	        }
 
-	        rowProps.onClick = this.handleRowClick.bind(this, item, index, rowProps, props)
+	        if (typeof props.renderText == 'function'){
+	            text = props.renderText(text, item, index, rowProps, props)
+	        }
 
+	        rowProps.children = text
+
+	        rowProps.onClick = this.handleRowClick.bind(this, item, index, rowProps, props)
 
 	        if (typeof this.props.rowStyle == 'function'){
 	            rowProps.style = assign({}, rowProps.style, this.props.rowStyle(item, index, rowProps))
@@ -446,10 +667,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        rowProps.className = this.prepareRowClassName(rowProps, this.state)
 
-	        if (props.rowFactory){
-	            rowProps.onMouseOver = this.handleRowMouseOver.bind(this, item, index, props, key)
-	            rowProps.onMouseOut  = this.handleRowMouseOut.bind(this, item, index, props, key)
-	        }
+	        // if (props.rowFactory || props.renderText){
+	            rowProps.onMouseEnter = this.handleRowMouseOver.bind(this, item, index, props, key, rowProps, rowProps.onMouseOver)
+	            rowProps.onMouseLeave = this.handleRowMouseOut.bind(this, item, index, props, key, rowProps, rowProps.onMouseOut)
+	        // }
 
 	        var defaultFactory = RowFactory
 	        var factory = props.rowFactory || defaultFactory
@@ -463,16 +684,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return result
 	    },
 
-	    handleRowMouseOver: function(item, index, props, key){
+	    handleRowMouseOver: function(item, index, props, key, rowProps, prevFn){
+
 	        this.setState({
-	            mouseOverKey: key
+	            mouseOverKey: index
 	        })
+
+	        ;(prevFn || emptyFn)(item, index, rowProps)
 	    },
 
-	    handleRowMouseOut: function(item, index, props, key){
+	    handleRowMouseOut: function(item, index, props, key, rowProps, prevFn){
 	        this.setState({
 	            mouseOverKey: undefined
 	        })
+
+	        ;(prevFn || emptyFn)(item, index, rowProps)
 	    },
 
 	    bindRowMethods: function(props, rowProps, bindMethods, item, index) {
@@ -509,18 +735,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    handleRowClick: function(item, index, rowProps, props, event) {
 
-	        // if (props.selectRowOnClick){
-
-	        //     var key         = item[props.idProperty]
-	        //     var selected    = props.selected || {}
-	        //     var rowSelected = !!selected[key]
-
-	        //     var fn = rowSelected? 'onDeselect': 'onSelect'
-
-	        //     ;(props[fn] || emptyFn)(key, item, index, selected, props)
-	        //     ;(props.onSelectionChange || emptyFn)(key, item, index, selected, props)
-	        // }
-
 	        ;(props.onRowClick || emptyFn)(item, index, props, event)
 
 	        this.handleSelection(rowProps, event)
@@ -540,7 +754,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** @jsx React.DOM */'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(6)
+	var assign = __webpack_require__(7)
 
 	module.exports = React.createClass({
 
@@ -574,8 +788,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** @jsx React.DOM */'use strict'
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(6)
-	var prefixer = __webpack_require__(8)
+	var assign = __webpack_require__(7)
+	var prefixer = __webpack_require__(9)
 
 	module.exports = React.createClass({
 
@@ -606,8 +820,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        assign(props, thisProps)
 
 	        props.style = this.prepareStyle(props)
-	        props.onMouseOver = this.handleMouseOver
-	        props.onMouseOut  = this.handleMouseOut
+
+	        props.onMouseEnter = this.handleMouseOver
+	        props.onMouseLeave  = this.handleMouseOut
 
 	        props.className = this.prepareClassName(props, state)
 
@@ -633,16 +848,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return className
 	    },
 
-	    handleMouseOver: function() {
+	    handleMouseOver: function(event) {
 	        this.setState({
 	            mouseOver: true
 	        })
+
+	        if (this.props.onMouseEnter){
+	            this.props.onMouseEnter(this.props, event)
+	        }
 	    },
 
 	    handleMouseOut: function() {
 	        this.setState({
 	            mouseOver: false
 	        })
+
+	        if (this.props.onMouseLeave){
+	            this.props.onMouseLeave(this.props, event)
+	        }
 	    }
 	})
 
@@ -667,10 +890,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var assign = __webpack_require__(6)
+	var assign      = __webpack_require__(7)
 	var getSelected = __webpack_require__(4)
-
-	var hasOwn = function(obj, prop){
+	var hasOwn      = function(obj, prop){
 	    return Object.prototype.hasOwnProperty.call(obj, prop)
 	}
 
@@ -699,7 +921,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	        var i = 0
-	        var data = this.props.data
+	        var data = this.data
 	        var len = data.length
 	        var id
 	        var idProperty = this.props.idProperty
@@ -760,7 +982,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var min = Math.min(prevShiftKeyIndex, selIndex)
 	            var max = Math.max(prevShiftKeyIndex, selIndex)
 
-	            var removeArray = props.data.slice(min, max + 1) || []
+	            var removeArray = this.data.slice(min, max + 1) || []
 
 	            removeArray.forEach(function(item){
 	                if (item){
@@ -832,7 +1054,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.selIndex = index
 	            this.shiftKeyIndex = null
 
-	            var unselect = this.handleMultiSelectionRowToggle(props.data[index], event)
+	            var unselect = this.handleMultiSelectionRowToggle(this.data[index], event)
 
 	            if (unselect){
 	                this.selIndex++
@@ -854,11 +1076,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        if (selIndex == null){
-	            data = [props.data[index]]
+	            data = [this.data[index]]
 	        } else {
 	            start = Math.min(index, selIndex)
 	            end   = Math.max(index, selIndex) + 1
-	            data  = props.data.slice(start, end)
+	            data  = this.data.slice(start, end)
 	        }
 
 	        this.handleMultiSelection(data, event, {
@@ -901,6 +1123,12 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
+	module.exports = __webpack_require__(10)
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 
 	function ToObject(val) {
@@ -930,14 +1158,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(10)
-	var Loader = __webpack_require__(9)
+	var assign = __webpack_require__(16)
+	var Loader = __webpack_require__(15)
 
 	module.exports = React.createClass({
 
@@ -985,13 +1213,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict'
+	'use strict';
 
-	var hasOwn         = __webpack_require__(11)
-	var getPrefixed    = __webpack_require__(12)
+	var hasOwn      = __webpack_require__(11)
+	var getPrefixed = __webpack_require__(12)
 
 	var map      = __webpack_require__(13)
 	var plugable = __webpack_require__(14)
@@ -1023,7 +1251,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 		return map(function(result){
 			return {
-				key  : getPrefixed(result.key),
+				key  : getPrefixed(result.key, result.value),
 				value: result.value
 			}
 		}, result)
@@ -1054,13 +1282,193 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = plugable(RESULT)
 
 /***/ },
-/* 9 */
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var curry = __webpack_require__(20)
+	var TYPES = __webpack_require__(21)
+
+	function isFn(fn){
+	    return typeof fn === 'function'
+	}
+
+	var sorty = curry(function(sortInfo, array){
+	    return array.sort(getMultiSortFunction(sortInfo))
+	})
+
+	sorty.types = TYPES
+
+	var getSingleSortFunction = function(info){
+
+	    if (!info){
+	        return
+	    }
+
+	    var field = info.name
+	    var dir   = info.dir === 'desc' || info.dir < 0?
+	                    -1:
+	                    info.dir === 'asc' || info.dir > 0?
+	                        1:
+	                        0
+
+	    if (!dir){
+	        return
+	    }
+
+	    if (!info.fn && info.type){
+	        info.fn = sorty.types[info.type]
+	    }
+
+	    if (!info.fn){
+	        info.fn = sorty.types.string || TYPES.string
+	    }
+
+	    var fn = info.fn
+
+	    return function(first, second){
+	        var a = first[field]
+	        var b = second[field]
+
+	        return dir * fn(a, b)
+	    }
+	}
+
+	var getSortFunctions = function(sortInfo){
+	    if (!Array.isArray(sortInfo)){
+	        sortInfo = [sortInfo]
+	    }
+
+	    return sortInfo.map(getSingleSortFunction).filter(isFn)
+	}
+
+	var getMultiSortFunction = function(sortInfo){
+
+	    var fns = getSortFunctions(sortInfo)
+
+	    return function(first, second){
+	        var result = 0
+	        var i      = 0
+	        var len    = fns.length
+	        var fn
+
+	        for (; i < len; i++){
+	            fn = fns[i]
+	            if (!fn){
+	                continue
+	            }
+
+	            result = fn(first, second)
+
+	            if (result != 0){
+	                return result
+	            }
+	        }
+
+	        return result
+	    }
+	}
+
+	sorty._getSortFunctions = getSortFunctions
+	sorty.getFunction = getMultiSortFunction
+
+	module.exports = sorty
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(obj, prop){
+		return Object.prototype.hasOwnProperty.call(obj, prop)
+	}
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getStylePrefixed = __webpack_require__(17)
+	var properties       = __webpack_require__(18)
+
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		return getStylePrefixed(key, value)
+	}
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = function(fn, item){
+
+		if (!item){
+			return
+		}
+
+		if (Array.isArray(item)){
+			return item.map(fn).filter(function(x){
+				return !!x
+			})
+		} else {
+			return fn(item)
+		}
+	}
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var getCssPrefixedValue = __webpack_require__(19)
+
+	module.exports = function(target){
+		target.plugins = target.plugins || [
+			(function(){
+				var values = {
+					'flex':1,
+					'inline-flex':1
+				}
+
+				return function(key, value){
+					if (key === 'display' && value in values){
+						return {
+							key  : key,
+							value: getCssPrefixedValue(key, value)
+						}
+					}
+				}
+			})()
+		]
+
+		target.plugin = function(fn){
+			target.plugins = target.plugins || []
+
+			target.plugins.push(fn)
+		}
+
+		return target
+	}
+
+/***/ },
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(10)
+	var assign = __webpack_require__(16)
 
 	module.exports = React.createClass({
 
@@ -1120,7 +1528,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 10 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1152,28 +1560,59 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = function(obj, prop){
-		return Object.prototype.hasOwnProperty.call(obj, prop)
+	var toUpperFirst = __webpack_require__(22)
+	var getPrefix    = __webpack_require__(23)
+	var el           = __webpack_require__(24)
+
+	var MEMORY = {}
+	var STYLE = el.style
+
+	module.exports = function(key, value){
+
+	    var k = key// + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+
+	    if (!(key in STYLE)){//we have to prefix
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = prefix + toUpperFirst(key)
+
+	            if (prefixed in STYLE){
+	                key = prefixed
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = key
+
+	    return key
 	}
 
-
 /***/ },
-/* 12 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toUpperFirst = __webpack_require__(15)
-	var getPrefix    = __webpack_require__(16)
-
-	var properties = {
+	module.exports = {
+	  'alignItems': 1,
+	  'justifyContent': 1,
 	  'flex': 1,
 	  'flexFlow': 1,
+
 	  'userSelect': 1,
 	  'transform': 1,
 	  'transition': 1,
@@ -1202,80 +1641,114 @@ return /******/ (function(modules) { // webpackBootstrap
 	  'appearance': 1
 	}
 
-
-	module.exports = function(key){
-
-		if (!properties[key]){
-			return key
-		}
-
-		var prefix = getPrefix(key)
-
-		return prefix?
-				prefix + toUpperFirst(key):
-				key
-
-	}
-
 /***/ },
-/* 13 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = function(fn, item){
+	var getPrefix     = __webpack_require__(23)
+	var forcePrefixed = __webpack_require__(25)
+	var el            = __webpack_require__(24)
 
-		if (!item){
-			return
-		}
+	var MEMORY = {}
+	var STYLE = el.style
 
-		if (Array.isArray(item)){
-			return item.map(fn).filter(function(x){
-				return !!x
-			})
-		} else {
-			return fn(item)
-		}
+	module.exports = function(key, value){
+
+	    var k = key + ': ' + value
+
+	    if (MEMORY[k]){
+	        return MEMORY[k]
+	    }
+
+	    var prefix
+	    var prefixed
+	    var prefixedValue
+
+	    if (!(key in STYLE)){
+
+	        prefix = getPrefix('appearance')
+
+	        if (prefix){
+	            prefixed = forcePrefixed(key, value)
+
+	            prefixedValue = '-' + prefix.toLowerCase() + '-' + value
+
+	            if (prefixed in STYLE){
+	                el.style[prefixed] = ''
+	                el.style[prefixed] = prefixedValue
+
+	                if (el.style[prefixed] !== ''){
+	                    value = prefixedValue
+	                }
+	            }
+	        }
+	    }
+
+	    MEMORY[k] = value
+
+	    return value
 	}
 
 /***/ },
-/* 14 */
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	function curry(fn, n){
+
+	    if (typeof n !== 'number'){
+	        n = fn.length
+	    }
+
+	    function getCurryClosure(prevArgs){
+
+	        function curryClosure() {
+
+	            var len  = arguments.length
+	            var args = [].concat(prevArgs)
+
+	            if (len){
+	                args.push.apply(args, arguments)
+	            }
+
+	            if (args.length < n){
+	                return getCurryClosure(args)
+	            }
+
+	            return fn.apply(this, args)
+	        }
+
+	        return curryClosure
+	    }
+
+	    return getCurryClosure([])
+	}
+
+	module.exports = curry
+
+/***/ },
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var getCssPrefixed = __webpack_require__(17)
+	module.exports = {
+	    string: function(a, b){
 
-	module.exports = function(target){
-		target.plugins = target.plugins || [
-			(function(){
-				var values = {
-					'flex':1,
-					'inline-flex':1
-				}
+	        a += ''
+	        b += ''
 
-				return function(key, value){
-					if (key === 'display' && value in values){
-						return {
-							key: key,
-							value: getCssPrefixed(key, value)
-						}
-					}
-				}
-			})()
-		]
+	        return a.localeCompare(b)
+	    },
 
-		target.plugin = function(fn){
-			target.plugins = target.plugins || []
-
-			target.plugins.push(fn)
-		}
-
-		return target
+	    number: function(a, b) {
+	        return a - b
+	    }
 	}
 
 /***/ },
-/* 15 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1287,15 +1760,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 16 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toUpperFirst = __webpack_require__(15)
+	var toUpperFirst = __webpack_require__(22)
 	var prefixes     = ["ms", "Moz", "Webkit", "O"]
 
-	var el = __webpack_require__(18)
+	var el = __webpack_require__(24)
 
 	var PREFIX
 
@@ -1321,44 +1794,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 17 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var toUpperFirst = __webpack_require__(15)
-	var getPrefix    = __webpack_require__(16)
-	var getPrefixed  = __webpack_require__(12)
-	var el           = __webpack_require__(18)
-
-	var MEMORY = {}
-
-	module.exports = function(key, value){
-
-	    var k = key + ': ' + value
-
-	    if (MEMORY[k]){
-	        return MEMORY[k]
-	    }
-
-	    var prefix = getPrefix('appearance')
-	    var prefixed = getPrefixed(key)
-
-	    var prefixedValue = '-' + prefix.toLowerCase() + '-' + value
-
-	    el.style[prefixed] = prefixedValue
-
-	    if (el.style[prefixed] === prefixedValue){
-	        value = prefixedValue
-	    }
-
-	    MEMORY[k] = value
-
-	    return value
-	}
-
-/***/ },
-/* 18 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -1371,6 +1807,35 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = el
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toUpperFirst = __webpack_require__(22)
+	var getPrefix    = __webpack_require__(23)
+	var properties   = __webpack_require__(18)
+
+	/**
+	 * Returns the given key prefixed, if the property is found in the prefixProps map.
+	 *
+	 * Does not test if the property supports the given value unprefixed.
+	 * If you need this, use './getPrefixed' instead
+	 */
+	module.exports = function(key, value){
+
+		if (!properties[key]){
+			return key
+		}
+
+		var prefix = getPrefix(key)
+
+		return prefix?
+					prefix + toUpperFirst(key):
+					key
+	}
 
 /***/ }
 /******/ ])

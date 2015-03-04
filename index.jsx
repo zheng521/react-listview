@@ -42,16 +42,21 @@ var LEN = 50
 var SELECTED
 var initial = true
 var SORT_DIR = 1
+var SELECTED = {}
 
-var SELECTED_INDEX = 10// - 10
+var SELECTED_INDEX = 30// - 10
 
 var App = React.createClass({
 
     handleSelect: function(key) {
-        SELECTED = {}
-        SELECTED[key] = true
+        console.log(arguments);
+        // SELECTED = key
+        // // SELECTED = {}
+        // // SELECTED[key] = true
 
-        this.setState({})
+        // // console.log(SELECTED);
+
+        // this.setState({})
     },
 
     handleSortChange: function(dir){
@@ -60,8 +65,11 @@ var App = React.createClass({
     },
 
     handleSelectedIndexChange: function(event) {
-        SELECTED_INDEX = event.target.value
-        this.setState({})
+        // setTimeout(function(){
+            // console.log('sort now');
+            SELECTED_INDEX = event.target.value
+            this.setState({})
+        // }.bind(this), 1000)
     },
 
     render: function() {
@@ -85,24 +93,26 @@ var App = React.createClass({
             initial = false
             data.forEach(function(item, index){
                 if (index == SELECTED_INDEX){
-                    SELECTED = item.id
-                    // selected[item.id] = true
+                    // SELECTED = item.id
+                    SELECTED[item.id] = true
                 }
             })
         }
 
-        console.log(SELECTED)
+        function r(v, props, index){
+            return v + ' is a very long long text! ' + index
+        }
 
         return (
             <div className="App" style={{padding: 10}}>
                 <input value={SELECTED_INDEX} onChange={this.handleSelectedIndexChange}/>
                 <ListView
-                    loading={true}
-                    sortDirection={SORT_DIR}
+                    defaultSortDirection={SORT_DIR}
                     onSortChange={this.handleSortChange}
-                    onSelect={this.handleSelect}
-                    xdefaultSelected={SELECTED}
-                    scrollToIndex={SELECTED_INDEX}
+                    onSelectionChange={this.handleSelect}
+                    defaultSelected={SELECTED}
+                    renderText={r}
+                    scrollToIndex={30}
                     data={data} title="React List View" style={style}/>
             </div>
         )

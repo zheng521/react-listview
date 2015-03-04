@@ -1,9 +1,8 @@
 'use strict';
 
-var assign = require('object-assign')
+var assign      = require('object-assign')
 var getSelected = require('./getSelected')
-
-var hasOwn = function(obj, prop){
+var hasOwn      = function(obj, prop){
     return Object.prototype.hasOwnProperty.call(obj, prop)
 }
 
@@ -32,7 +31,7 @@ module.exports = {
 
 
         var i = 0
-        var data = this.props.data
+        var data = this.data
         var len = data.length
         var id
         var idProperty = this.props.idProperty
@@ -93,7 +92,7 @@ module.exports = {
             var min = Math.min(prevShiftKeyIndex, selIndex)
             var max = Math.max(prevShiftKeyIndex, selIndex)
 
-            var removeArray = props.data.slice(min, max + 1) || []
+            var removeArray = this.data.slice(min, max + 1) || []
 
             removeArray.forEach(function(item){
                 if (item){
@@ -165,7 +164,7 @@ module.exports = {
             this.selIndex = index
             this.shiftKeyIndex = null
 
-            var unselect = this.handleMultiSelectionRowToggle(props.data[index], event)
+            var unselect = this.handleMultiSelectionRowToggle(this.data[index], event)
 
             if (unselect){
                 this.selIndex++
@@ -187,11 +186,11 @@ module.exports = {
         }
 
         if (selIndex == null){
-            data = [props.data[index]]
+            data = [this.data[index]]
         } else {
             start = Math.min(index, selIndex)
             end   = Math.max(index, selIndex) + 1
-            data  = props.data.slice(start, end)
+            data  = this.data.slice(start, end)
         }
 
         this.handleMultiSelection(data, event, {

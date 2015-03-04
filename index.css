@@ -595,12 +595,10 @@ th {
   white-space: nowrap;
 }
 .u-nonav,
-.u-unselectable,
-.z-listview .z-title {
+.u-unselectable {
   touch-callout: none;
 }
-.u-unselectable,
-.z-listview .z-title {
+.u-unselectable {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -634,9 +632,7 @@ html.u-app body {
 .u-border-box * {
   box-sizing: border-box;
 }
-.u-ellipsis,
-.z-listview .z-title,
-.z-listview .z-row {
+.u-ellipsis {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -670,6 +666,9 @@ html.u-app body * {
 .loadmask .loader .loadbar {
   border-radius: 50px;
   box-shadow: 0 0 3px rgba(0,0,0,0.2);
+  -moz-box-shadow: 0 0 3px rgba(0,0,0,0.2);
+  -webkit-box-shadow: 0 0 3px rgba(0,0,0,0.2);
+  -ms-box-shadow: 0 0 3px rgba(0,0,0,0.2);
   position: absolute;
   left: 44.5%;
   top: 37%;
@@ -834,14 +833,6 @@ html.u-app body * {
     opacity: 0.25;
   }
 }
-.z-listview {
-  display: -webkit-box;
-  display: -moz-box;
-  display: -ms-flexbox;
-  display: -webkit-flex;
-  display: flex;
-  flex-direction: column;
-}
 .z-listview,
 .z-listview * {
   box-sizing: border-box;
@@ -894,14 +885,6 @@ html.u-app body * {
   width: 100%;
   position: relative;
 }
-.z-listview .z-icon-sort-info {
-  display: inline-block;
-  width: 0px;
-  height: 0px;
-  margin-left: 10px;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-}
 .z-listview .z-drag-handle {
   cursor: move;
   position: absolute;
@@ -913,7 +896,6 @@ html.u-app body * {
 .z-listview .z-list {
   margin: 0px;
   padding: 0px;
-  background: #fff;
   list-style-type: none;
   position: relative;
 }
@@ -938,37 +920,6 @@ html.u-app body * {
 .z-listview.z-empty .z-row-empty {
   text-align: center;
 }
-.z-listview .z-title {
-  padding: 5px;
-  background: linear-gradient(to bottom, #f7f7f7 0%, #efefef 13%, #e6e6e6 100%);
-  border-bottom: 1px solid #a8a8a8;
-  font-weight: bold;
-}
-.z-listview.z-asc .z-icon-sort-info {
-  border-bottom: 8px solid #6eb8f1;
-}
-.z-listview.z-desc .z-icon-sort-info {
-  border-top: 8px solid #6eb8f1;
-}
-.z-listview .z-row {
-  list-style-type: none;
-  padding: 5px;
-  border-bottom: 1px dotted #a8a8a8;
-  border-right: 1px dotted #a8a8a8;
-  cursor: default;
-}
-.z-listview .z-row.z-last {
-  border-bottom: 0px;
-}
-.z-listview .z-row.z-over {
-  background: #d7e7ff;
-}
-.z-listview .z-row.z-selected {
-  background: #e1edff;
-}
-.z-listview .z-row.z-selected.z-over {
-  background: #c0d9ff;
-}
 .z-listview .z-row.z-row-clone {
   background: rgba(168,168,168,0.63);
   width: 100%;
@@ -989,8 +940,4 @@ html.u-app body * {
 }
 .z-listview.z-dragging .z-row .z-drag-handle {
   background-image: linear-gradient(transparent 50%, #fff 50%);
-}
-.z-listview.z-empty .z-list {
-  font-style: italic;
-  color: #808080;
 }
