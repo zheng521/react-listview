@@ -27,12 +27,31 @@ module.exports = React.createClass({
         return {}
     },
 
+    shouldComponentUpdate: function(nextProps){
+        var updateOnOverChange
+        var updateOnSelectedChange
+
+        if (nextProps.mouseOverChange){
+            updateOnOverChange = nextProps.mouseOver != this.props.mouseOver
+        }
+
+        if (nextProps.selectedChange){
+            updateOnSelectedChange = nextProps.selected != this.props.selected
+        }
+
+        if (updateOnSelectedChange !== undefined || updateOnOverChange !== undefined){
+            return updateOnSelectedChange || updateOnOverChange || false
+        }
+
+        return true
+    },
+
     prepareProps: function(thisProps, state) {
         var props = {}
 
         assign(props, thisProps)
 
-        props.style = this.prepareStyle(props)
+        props.style = this.prepareStyle(props, state)
 
         props.onMouseEnter = this.handleMouseOver
         props.onMouseLeave  = this.handleMouseOut
@@ -43,8 +62,26 @@ module.exports = React.createClass({
 
     },
 
-    prepareStyle: function(props) {
-        var style = assign({}, props.defaultStyle, props.style)
+    prepareStyle: function(props, state) {
+        var over = state.mouseOver || props.mouseOver
+
+        var overStyle
+        var selectedStyle
+        var overSelectedStyle
+
+        if (over){
+            overStyle = props.overStyle
+        }
+
+        if (props.selected){
+            selectedStyle = props.selectedStyle
+        }
+
+        if (over && props.selected){
+            overSelectedStyle = props.overSelectedStyle
+        }
+
+        var style = assign({}, props.defaultStyle, props.style, overStyle, selectedStyle, overSelectedStyle)
 
         return prefixer(style)
     },
@@ -71,7 +108,7 @@ module.exports = React.createClass({
         }
     },
 
-    handleMouseOut: function() {
+    handleMouseOut: function(event) {
         this.setState({
             mouseOver: false
         })

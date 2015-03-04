@@ -14,7 +14,7 @@ var gen = (function(){
     return function(len){
 
         if (cache[len]){
-            return cache[len]
+            // return cache[len]
         }
 
         var arr = []
@@ -38,7 +38,7 @@ var gen = (function(){
 
 
 var VALUE = 90
-var LEN = 50
+var LEN = 500
 var SELECTED
 var initial = true
 var SORT_DIR = 1
@@ -72,6 +72,10 @@ var App = React.createClass({
         // }.bind(this), 1000)
     },
 
+    refresh: function(){
+        this.setState({})
+    },
+
     render: function() {
 
 
@@ -84,6 +88,8 @@ var App = React.createClass({
             // margin: 10,
             // padding: 10
         }
+
+        console.log('refresh');
 
         var data = gen(LEN)
 
@@ -106,13 +112,14 @@ var App = React.createClass({
         return (
             <div className="App" style={{padding: 10}}>
                 <input value={SELECTED_INDEX} onChange={this.handleSelectedIndexChange}/>
+                <button onClick={this.refresh}>refresh</button>
                 <ListView
-                    defaultSortDirection={SORT_DIR}
-                    onSortChange={this.handleSortChange}
+                    defaultSortDirection={0}
+
                     onSelectionChange={this.handleSelect}
                     defaultSelected={SELECTED}
                     renderText={r}
-                    scrollToIndex={30}
+                    evenRowStyle={{color: 'red'}}
                     data={data} title="React List View" style={style}/>
             </div>
         )

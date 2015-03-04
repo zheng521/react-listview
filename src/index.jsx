@@ -13,6 +13,7 @@ var sorty     = require('sorty')
 var assign    = require('object-assign')
 var normalize = require('react-style-normalizer')
 
+var classes = require('./classes')
 var getSelected = require('./getSelected')
 var PropTypes   = React.PropTypes
 
@@ -33,7 +34,8 @@ module.exports = React.createClass({
 
     mixins: [
         require('./RowSelect'),
-        require('./PrepareStyles')
+        require('./PrepareStyles'),
+        require('./PrepareClasses')
     ],
 
     propTypes: {
@@ -61,6 +63,10 @@ module.exports = React.createClass({
         sortable     : PropTypes.bool,
         sortDirection: stringOrNumber,
         toggleSort   : PropTypes.func
+    },
+
+    xshouldComponentUpdate: function() {
+        return false
     },
 
     scrollToRow: function(row) {
@@ -155,7 +161,9 @@ module.exports = React.createClass({
                 display: 'flex',
                 alignItems: 'stretch',
                 flexFlow: 'column',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+
+                overflow: 'hidden' //check why does firefox need this
             },
 
             defaultListStyle: {
@@ -220,7 +228,22 @@ module.exports = React.createClass({
 
             defaultLastRowStyle: {
                 borderBottom: 0
-            }
+            },
+
+            defaultClassName: 'z-listview',
+            defaultEmptyClassName: 'z-empty',
+            defaultSortableClassName: 'z-sortable',
+            defaultSortAscClassName: 'z-asc',
+            defaultSortDescClassName: 'z-dec',
+
+            defaultTitleClassName: 'z-title',
+            defaultRowClassName: 'z-row',
+
+            defaultFirstRowClassName: 'z-first',
+            defaultLastRowClassName: 'z-last',
+
+            defaultEvenRowClassName: 'z-even',
+            defaultOddRowClassName: 'z-odd'
         }
     },
 
@@ -317,10 +340,11 @@ module.exports = React.createClass({
         this.data = props.data = this.prepareData(props)
 
         props.count = this.data.length
+        props.empty = !props.count
 
         this.prepareStyles(props)
 
-        props.className = this.prepareClassName(props)
+        this.prepareClasses(props)
 
         return props
     },
@@ -351,38 +375,13 @@ module.exports = React.createClass({
         return data
     },
 
-    prepareClassName: function(props) {
-        var className = props.className || ''
-
-        className += ' z-listview'
-
-        if (!props.count){
-            className += ' z-empty'
-        }
-
-        var sortableCls = props.sortable?
-                            ' z-sortable':
-                            ''
-        if (props.sortable && props.sortDirection){
-            sortableCls += props.sortDirection === 1?
-                                ' z-asc':
-                                props.sortDirection === -1?
-                                    ' z-desc':
-                                    ''
-        }
-
-        className += sortableCls
-
-        return className
-    },
-
     renderTitle: function(props) {
         if (props.title){
 
             var titleProps = {
                 style        : props.titleStyle,
                 sortDirection: props.sortDirection,
-                className    : (props.titleClassName || '') + ' z-title',
+                className    : classes(props.defaultTitleClassName, props.titleClassName),
                 onClick      : this.handleTitleClick.bind(this, props),
                 title        : props.title,
                 children     : [
@@ -444,8 +443,8 @@ module.exports = React.createClass({
     renderList: function(props, state) {
 
         var className = 'z-list'
-        var count = props.count
-        var empty = false
+        var count     = props.count
+        var empty     = false
 
         if (!count){
             empty = true
@@ -485,41 +484,71 @@ module.exports = React.createClass({
         }
 
         var mouseOver = state.mouseOverKey === index
+
         if (mouseOver){
             rowClassName += ' z-over'
         }
 
-        var rowStyle = props.rowStyle
+        var rowStyle = assign({}, props.rowStyle)
+
+        var selectedStyle
 
         if (isSelected){
-            rowStyle = assign({}, rowStyle, props.defaultSelectedRowStyle, props.selectedRowStyle)
+            selectedStyle = assign({}, props.defaultSelectedRowStyle, props.selectedRowStyle)
+            assign(rowStyle, selectedStyle)
         }
+
+        var mouseOverStyle
 
         if (mouseOver){
-            rowStyle = assign({}, rowStyle, props.defaultOverRowStyle, props.overRowStyle)
+            mouseOverStyle = assign({}, props.defaultOverRowStyle, props.overRowStyle)
+            assign(rowStyle, mouseOverStyle)
         }
 
+        var overSelectedStyle
+
         if (isSelected && mouseOver){
-            assign(rowStyle, props.defaultOverSelectedRowStyle, props.overSelectedRowStyle)
+            overSelectedStyle = assign(props.defaultOverSelectedRowStyle, props.overSelectedRowStyle)
+            assign(rowStyle, overSelectedStyle)
         }
 
         var isFirst = index === 0
         var isLast  = index === arr.length - 1
+        var isOdd   = index % 2
+        var isEven  = !isOdd
 
         if (isLast){
-            rowStyle = assign({}, rowStyle, props.defaultLastRowStyle, props.lastRowStyle)
+            assign(rowStyle, props.defaultLastRowStyle, props.lastRowStyle)
         }
+
+        if (isOdd){
+            props.oddRowStyle && assign(rowStyle, props.oddRowStyle)
+        } else {
+            props.evenRowStyle && assign(rowStyle, props.evenRowStyle)
+        }
+
+        var forceUpdate
 
         var rowProps = {
             key      : key,
-            style    : rowStyle,
+
             'data-row-id': key,
             index    : index,
             first    : isFirst,
             last     : isLast,
+            odd      : isOdd,
+            even     : isEven,
             data     : item,
+            selected : isSelected,
+
             className: rowClassName,
-            mouseOver: mouseOver
+            style    : rowStyle,
+            overStyle: mouseOverStyle,
+            selectedStyle: selectedStyle,
+            overSelectedStyle: overSelectedStyle,
+            mouseOver: mouseOver,
+            mouseOverChange: this.mouseOverChange,
+            selectedChange : this.selectedChange
         }
 
         if (typeof props.renderText == 'function'){
@@ -536,7 +565,7 @@ module.exports = React.createClass({
 
         this.bindRowMethods(props, rowProps, props.rowBoundMethods, item, index)
 
-        rowProps.className = this.prepareRowClassName(rowProps, this.state)
+        rowProps.className = this.prepareRowClassName(props, rowProps, this.state)
 
         // if (props.rowFactory || props.renderText){
             rowProps.onMouseEnter = this.handleRowMouseOver.bind(this, item, index, props, key, rowProps, rowProps.onMouseOver)
@@ -557,16 +586,26 @@ module.exports = React.createClass({
 
     handleRowMouseOver: function(item, index, props, key, rowProps, prevFn){
 
+        this.mouseOverChange = true
+
+        // return
         this.setState({
             mouseOverKey: index
+        }, function(){
+            this.mouseOverChange = false
         })
 
         ;(prevFn || emptyFn)(item, index, rowProps)
     },
 
     handleRowMouseOut: function(item, index, props, key, rowProps, prevFn){
+        this.mouseOverChange = true
+
+        // return
         this.setState({
             mouseOverKey: undefined
+        }, function(){
+            this.mouseOverChange = false
         })
 
         ;(prevFn || emptyFn)(item, index, rowProps)
@@ -580,28 +619,6 @@ module.exports = React.createClass({
                 rowProps[eventName] = props[key].bind(null, item, index, props)
             }
         }, this)
-    },
-
-    prepareRowClassName: function(rowProps, state) {
-        var index = rowProps.index
-
-        var className = (rowProps.className || '') + ' z-row'
-
-        if (index % 2){
-            className += ' z-odd'
-        } else {
-            className += ' z-even'
-        }
-
-        if (rowProps.first){
-            className += ' z-first'
-        }
-
-        if (rowProps.last){
-            className += ' z-last'
-        }
-
-        return className
     },
 
     handleTitleClick: function(props, event){

@@ -53,8 +53,11 @@ module.exports = {
         }
 
         if (!hasOwn(this.props, 'selected')){
+            this.selectedChange = true
             this.setState({
                 defaultSelected: selected
+            }, function(){
+                this.selectedChange = false
             })
         }
     },
