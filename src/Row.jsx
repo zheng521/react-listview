@@ -2,17 +2,18 @@
 
 var React  = require('react')
 var assign = require('object-assign')
-var prefixer = require('react-style-normalizer')
+var normalize = require('react-style-normalizer')
+
+var DISPLAY_NAME = 'ReactListView.Row'
 
 module.exports = React.createClass({
 
-    displayName: 'ReactListView.Row',
+    displayName: DISPLAY_NAME,
 
     getDefaultProps: function() {
         return {
-            defaultStyle: {
-                userSelect: 'none'
-            }
+            defaultStyle: null,
+            style       : null
         }
     },
 
@@ -27,7 +28,7 @@ module.exports = React.createClass({
         return {}
     },
 
-    shouldComponentUpdate: function(nextProps){
+    xshouldComponentUpdate: function(nextProps){
         var updateOnOverChange
         var updateOnSelectedChange
 
@@ -63,27 +64,7 @@ module.exports = React.createClass({
     },
 
     prepareStyle: function(props, state) {
-        var over = state.mouseOver || props.mouseOver
-
-        var overStyle
-        var selectedStyle
-        var overSelectedStyle
-
-        if (over){
-            overStyle = props.overStyle
-        }
-
-        if (props.selected){
-            selectedStyle = props.selectedStyle
-        }
-
-        if (over && props.selected){
-            overSelectedStyle = props.overSelectedStyle
-        }
-
-        var style = assign({}, props.defaultStyle, props.style, overStyle, selectedStyle, overSelectedStyle)
-
-        return prefixer(style)
+        return normalize(assign({}, props.defaultStyle, props.style))
     },
 
     prepareClassName: function(props, state) {
@@ -99,6 +80,7 @@ module.exports = React.createClass({
     },
 
     handleMouseOver: function(event) {
+
         this.setState({
             mouseOver: true
         })

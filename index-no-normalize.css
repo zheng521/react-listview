@@ -409,54 +409,6 @@ html.u-app body * {
 .z-listview * {
   box-sizing: border-box;
 }
-.z-listview .z-title {
-  -webkit-box-flex: none;
-  -moz-box-flex: none;
-  -ms-box-flex: none;
-  -ms-flex: none;
-  -webkit-flex: none;
-  flex: none;
-}
-.z-listview .z-body {
-  -webkit-box-flex: 1 auto;
-  -moz-box-flex: 1 auto;
-  -ms-box-flex: 1 auto;
-  -ms-flex: 1 auto;
-  -webkit-flex: 1 auto;
-  flex: 1 auto;
-  position: relative;
-  display: -webkit-box;
-  display: -moz-box;
-  display: -ms-flexbox;
-  display: -webkit-flex;
-  display: flex;
-  align-items: stretch;
-  flex-direction: column;
-  -webkit-flex-flow: column;
-  -moz-flex-flow: column;
-  -ms-flex-flow: column;
-  -o-flex-flow: column;
-  flex-flow: column;
-  flex-flow: column;
-  box-orient: vertical;
-}
-.z-listview.z-auto-height .z-body {
-  -webkit-box-flex: 1 0 auto;
-  -moz-box-flex: 1 0 auto;
-  -ms-box-flex: 1 0 auto;
-  -ms-flex: 1 0 auto;
-  -webkit-flex: 1 0 auto;
-  flex: 1 0 auto;
-}
-.z-listview .z-list-wrap {
-  position: relative;
-  width: 100%;
-  overflow: auto;
-}
-.z-listview .z-scroller {
-  width: 100%;
-  position: relative;
-}
 .z-listview .z-drag-handle {
   cursor: move;
   position: absolute;
@@ -465,29 +417,9 @@ html.u-app body * {
   height: 20px;
   display: none;
 }
-.z-listview .z-list {
-  margin: 0px;
-  padding: 0px;
-  list-style-type: none;
-  position: relative;
-}
 .z-listview.z-with-handles.z-draggable .z-row.z-over .z-drag-handle,
 .z-listview.z-with-handles.z-draggable .z-row.z-row-drag-over .z-drag-handle {
   display: inline-block;
-}
-.z-listview.z-empty .z-list-wrap {
-  -webkit-box-flex: 1;
-  -moz-box-flex: 1;
-  -ms-box-flex: 1;
-  -ms-flex: 1;
-  -webkit-flex: 1;
-  flex: 1;
-  display: -webkit-box;
-  display: -moz-box;
-  display: -ms-flexbox;
-  display: -webkit-flex;
-  display: flex;
-  align-items: center;
 }
 .z-listview.z-empty .z-row-empty {
   text-align: center;

@@ -13,8 +13,9 @@ var sorty     = require('sorty')
 var assign    = require('object-assign')
 var normalize = require('react-style-normalizer')
 
-var classes = require('./classes')
-var getSelected = require('./getSelected')
+var classes             = require('./classes')
+var findIndexByProperty = require('./findIndexByProperty')
+var getSelected         = require('./getSelected')
 var PropTypes   = React.PropTypes
 
 var stringOrNumber = PropTypes.oneOfType([
@@ -26,7 +27,11 @@ function emptyFn(){}
 
 var scrollToRowIfNeeded = require('./scrollToRowIfNeeded')
 
-var DISPLAY_NAME = 'ReactListView'
+var DISPLAY_NAME     = 'ReactListView'
+var MAX_SCREEN_SIZE  = Math.max(window.screen.height, window.screen.width)
+var BUFFER_ROW_COUNT = Math.ceil(MAX_SCREEN_SIZE / 12)
+
+var SIZING_ID = '___SIZING___'
 
 module.exports = React.createClass({
 
@@ -71,17 +76,49 @@ module.exports = React.createClass({
 
     scrollToRow: function(row) {
         if (row){
-            return scrollToRowIfNeeded.call(this, row, this.refs.listWrap.getDOMNode())
+            return scrollToRowIfNeeded.call(this, row, this.refs.scrollTarget.getDOMNode())
         }
     },
 
     scrollToRowById: function(id) {
-        this.scrollToRow(this.findRowById(id))
+        var row = this.findRowById(id)
+        var index
+
+        if (row){
+            index = row.getAttribute('data-index') * 1
+        } else {
+            index = findIndexByProperty(this.data, this.props.idProperty, id)
+        }
+
+        this.scrollToRowByIndex(index)
     },
 
     scrollToRowByIndex: function(index) {
-        this.scrollToRow(this.findRowByIndex(index))
+        var row
 
+        if (index < 0 || index >= this.data.length){
+            return
+        }
+
+        if (this.isVirtualRendering()){
+            var indexes    = this.getRenderIndexes()
+            var startIndex = indexes.start
+            var endIndex   = indexes.end
+
+            if (index < startIndex || index >= endIndex){
+                this.setState({
+                    renderStartIndex: index
+                }, function(){
+                    this.scrollToRowByIndex(index)
+                })
+
+                return
+            }
+        }
+
+        row = this.findRowByIndex(index)
+
+        this.scrollToRow(row)
     },
 
     findRowByIndex: function(index) {
@@ -106,6 +143,11 @@ module.exports = React.createClass({
         return {
             'data-display-name': DISPLAY_NAME,
 
+            virtualRendering: true,
+            rowHeight: null,
+            bufferRowCount: null,
+            rowsOutsideView: 5,
+
             rowBoundMethods: {
                 onRowMouseDown : 'onMouseDown',
                 onRowMouseUp   : 'onMouseUp',
@@ -128,8 +170,6 @@ module.exports = React.createClass({
             displayProperty: 'text',
             emptyText      : 'No records',
             loadingText    : '',
-
-            rowHeight: null,
 
             defaultStyle: {
                 display : 'flex',
@@ -196,6 +236,7 @@ module.exports = React.createClass({
                 boxSizing: 'border-box',
                 listStyleType: 'none',
                 cursor: 'default',
+                userSelect: 'none',
 
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -243,19 +284,29 @@ module.exports = React.createClass({
             defaultLastRowClassName: 'z-last',
 
             defaultEvenRowClassName: 'z-even',
-            defaultOddRowClassName: 'z-odd'
+            defaultOddRowClassName: 'z-odd',
+
+            startIndex: 0
         }
     },
 
     componentWillReceiveProps: function(){
         this.checkData(this.props)
+
+        setTimeout(function(){
+            this.checkRowHeight(this.props)
+            this.updateStartIndex
+        }.bind(this), 10)
     },
 
     componentWillMount: function(){
+
         this.checkData(this.props)
     },
 
     componentDidMount: function() {
+        this.checkRowHeight(this.props)
+
         if (this.props.scrollToIndex){
             setTimeout(function(){
                 this.scrollToRowByIndex(this.props.scrollToIndex)
@@ -265,24 +316,40 @@ module.exports = React.createClass({
         ;(this.props.onMount || emptyFn)(this)
     },
 
+    checkRowHeight: function(props) {
+        if (this.isVirtualRendering()){
+
+            //if virtual rendering and no rowHeight specifed, we use
+            var row = this.findRowById(SIZING_ID)
+            var config = {}
+
+            if (row){
+                this.setState({
+                    rowHeight: config.rowHeight = row.offsetHeight
+                })
+            }
+
+            //this ensures rows are kept in view
+            this.updateStartIndex(props, undefined, config)
+        }
+    },
+
     checkData: function(props) {
         var data     = props.data
         var sortable = props.sortable && data && Array.isArray(data)
+        var newState = {}
 
         if (sortable && this.state.defaultSortDirection != null){
             //if sorting should be done in state
             //then we have to do it here, to prevent sorting
             //on every state change
 
-            this.setState({
-                data: this.sort(data)
-            })
-
+            newState.data = this.sort(data)
         } else {
-            this.setState({
-                data: null
-            })
+            newState.data = null
         }
+
+        this.setState(newState)
     },
 
     sort: function(data, sortDirection) {
@@ -312,6 +379,7 @@ module.exports = React.createClass({
 
     getInitialState: function() {
         return {
+            renderStartIndex    : 0,
             defaultSelected     : this.props.defaultSelected,
             defaultSortDirection: this.props.defaultSortDirection
         }
@@ -319,6 +387,7 @@ module.exports = React.createClass({
 
     render: function() {
 
+        window.list = this
         var state = this.state
         var props = this.prepareProps(this.props)
         var title = this.renderTitle(props, state)
@@ -336,8 +405,13 @@ module.exports = React.createClass({
 
         var props = assign({}, thisProps)
 
-        props.sortDirection = this.prepareSortDirection(props)
+        props.rowHeight = this.prepareRowHeight(props)
         this.data = props.data = this.prepareData(props)
+
+        //make sure data is ready when preparing virtual rendering
+        this.prepareVirtualRendering(props, this.state)
+
+        props.sortDirection = this.prepareSortDirection(props)
 
         props.count = this.data.length
         props.empty = !props.count
@@ -347,6 +421,53 @@ module.exports = React.createClass({
         this.prepareClasses(props)
 
         return props
+    },
+
+    prepareRowHeight: function(){
+        return this.props.rowHeight == null? this.state.rowHeight: this.props.rowHeight
+    },
+
+    prepareBufferRowCount: function(props){
+        var rowHeight = this.prepareRowHeight(props)
+
+        return props.bufferRowCount == null && rowHeight != null?
+                        Math.ceil(MAX_SCREEN_SIZE/rowHeight) + props.rowsOutsideView:
+                        BUFFER_ROW_COUNT
+    },
+
+    isVirtualRendering: function(){
+        return this.props.virtualRendering || (this.props.rowHeight != null)
+    },
+
+    getRenderIndexes: function(){
+        var bufferRowCount = this.prepareBufferRowCount(this.props)
+        var startIndex     = this.state.renderStartIndex
+        var endIndex       = Math.min(this.data.length, startIndex + bufferRowCount)
+
+        return {
+            start: startIndex,
+            end  : endIndex
+        }
+    },
+
+    prepareVirtualRendering: function(props, state) {
+        var rowHeight = props.rowHeight
+
+        props.virtualRendering = this.isVirtualRendering()
+
+        if (props.virtualRendering && !props.empty){
+            var data    = this.data
+            var indexes = this.getRenderIndexes()
+
+            var startIndex  = indexes.start
+            var endIndex    = indexes.end
+
+            props.startIndex = startIndex
+            props.endIndex = endIndex
+
+            props.beforeHeight = startIndex * rowHeight
+            props.afterHeight  = (data.length - endIndex) * rowHeight
+        }
     },
 
     prepareSortDirection: function(props) {
@@ -432,12 +553,42 @@ module.exports = React.createClass({
 
     renderListWrap: function(props, state) {
         return (
-            <div ref="listWrap" className="z-list-wrap" style={props.listWrapStyle}>
+            <div className="z-list-wrap" style={props.listWrapStyle} ref="scrollTarget" onScroll={this.handleScroll.bind(this, props)}>
                 <div data-display-name="scroller" style={{position: 'relative', width: '100%'}}>
                     {this.renderList(props, state)}
                 </div>
             </div>
         )
+    },
+
+    handleScroll: function(props, event) {
+        var scrollTop = event.target.scrollTop
+
+        this.updateStartIndex(props, scrollTop)
+    },
+
+    updateStartIndex: function(props, scrollTop, config){
+
+        if (scrollTop == null){
+            scrollTop = this.refs.scrollTarget.getDOMNode().scrollTop
+        }
+
+        var state = {
+            menuColumn: null
+        }
+
+        config = config || {}
+
+        var rowHeight = config.rowHeight || this.prepareRowHeight()
+        var virtualRendering = this.props.virtualRendering || rowHeight != null
+
+        if (virtualRendering){
+            var index = Math.floor(scrollTop / rowHeight) - Math.floor(this.props.rowsOutsideView / 2)
+
+            this.setState({
+                renderStartIndex: index <= 0? 0: index
+            })
+        }
     },
 
     renderList: function(props, state) {
@@ -453,9 +604,34 @@ module.exports = React.createClass({
 
         var data     = props.data
         var selected = getSelected(props, state)
+        var before
+        var after
+
+        var sizingRow
+
+        if (props.virtualRendering && !empty){
+
+            before = <div style={{height: props.beforeHeight, width: 1}}></div>
+            after  = <div style={{height: props.afterHeight, width: 1}}></div>
+
+            data = data.slice(props.startIndex, props.endIndex)
+
+            if (!this.props.rowHeight){
+                var sizingItem = {}
+                sizingItem[props.displayProperty] = 'Sizing'
+                sizingItem[props.idProperty]      = SIZING_ID
+                sizingRow = this.renderRow(props, state, selected, sizingItem, -1, [], {visibility: 'hidden', position: 'absolute', height: null})
+            }
+        }
+
+        this.renderData = data
+
         return (
-            <ul className={className} style={props.listTagStyle} >
+            <ul className={className} style={props.listTagStyle}>
+                {before}
+                {sizingRow}
                 {empty? this.renderEmpty(props): data.map(this.renderRow.bind(this, props, state, selected))}
+                {after}
             </ul>
         )
     },
@@ -464,18 +640,26 @@ module.exports = React.createClass({
         return <li className="z-row-empty" style={props.emptyTextStyle}>{props.loading? props.loadingText: props.emptyText}</li>
     },
 
-    renderRow: function(props, state, selected, item, index, arr) {
-        var key  = item[props.idProperty]
-        var text = item[props.displayProperty]
+    renderRow: function(props, state, selected, item, index, arr, extraStyle) {
+
+        var renderIndex = index
+
+        if (props.virtualRendering){
+            index += props.startIndex
+        }
+
+        var key    = renderIndex
+        var itemId = item[props.idProperty]
+        var text   = item[props.displayProperty]
 
         var rowClassName = ''
 
         var isSelected = false
 
         if (typeof selected == 'object' && selected){
-            isSelected = !!selected[key]
+            isSelected = !!selected[itemId]
         } else if (selected != null){
-            isSelected = key === selected
+            isSelected = itemId === selected
         }
 
         if (isSelected){
@@ -489,36 +673,31 @@ module.exports = React.createClass({
             rowClassName += ' z-over'
         }
 
-        var rowStyle = assign({}, props.rowStyle)
+        var rowStyle = assign({}, props.rowStyle, extraStyle)
 
-        var selectedStyle
-
+        var selectedStyle = props.selectedRowStyle
         if (isSelected){
-            selectedStyle = assign({}, props.defaultSelectedRowStyle, props.selectedRowStyle)
             assign(rowStyle, selectedStyle)
         }
 
-        var mouseOverStyle
-
+        var mouseOverStyle = props.overRowStyle
         if (mouseOver){
-            mouseOverStyle = assign({}, props.defaultOverRowStyle, props.overRowStyle)
             assign(rowStyle, mouseOverStyle)
         }
 
-        var overSelectedStyle
+        var overSelectedStyle = props.overSelectedRowStyle
 
         if (isSelected && mouseOver){
-            overSelectedStyle = assign(props.defaultOverSelectedRowStyle, props.overSelectedRowStyle)
             assign(rowStyle, overSelectedStyle)
         }
 
         var isFirst = index === 0
-        var isLast  = index === arr.length - 1
+        var isLast  = index === this.data.length - 1
         var isOdd   = index % 2
         var isEven  = !isOdd
 
         if (isLast){
-            assign(rowStyle, props.defaultLastRowStyle, props.lastRowStyle)
+            assign(rowStyle, props.lastRowStyle)
         }
 
         if (isOdd){
@@ -532,7 +711,9 @@ module.exports = React.createClass({
         var rowProps = {
             key      : key,
 
-            'data-row-id': key,
+            'data-row-id': itemId,
+            'data-index': index,
+
             index    : index,
             first    : isFirst,
             last     : isLast,
@@ -543,9 +724,11 @@ module.exports = React.createClass({
 
             className: rowClassName,
             style    : rowStyle,
+
             overStyle: mouseOverStyle,
             selectedStyle: selectedStyle,
             overSelectedStyle: overSelectedStyle,
+
             mouseOver: mouseOver,
             mouseOverChange: this.mouseOverChange,
             selectedChange : this.selectedChange

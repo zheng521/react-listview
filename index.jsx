@@ -14,14 +14,14 @@ var gen = (function(){
     return function(len){
 
         if (cache[len]){
-            // return cache[len]
+            return cache[len]
         }
 
         var arr = []
 
         for (var i = 0; i < len; i++){
             arr.push({
-                id       : i + 1,
+                id       : i + 1 + 'x',
                 grade      : Math.round(Math.random() * 10),
                 email    : faker.internet.email(),
                 text: faker.name.firstName(),
@@ -38,11 +38,12 @@ var gen = (function(){
 
 
 var VALUE = 90
-var LEN = 500
+var LEN = 200
 var SELECTED
 var initial = true
 var SORT_DIR = 1
 var SELECTED = {}
+var PADDING = 15
 
 var SELECTED_INDEX = 30// - 10
 
@@ -109,16 +110,22 @@ var App = React.createClass({
             return v + ' is a very long long text! ' + index
         }
 
+        var changePadding = function(e){
+            PADDING = e.target.value
+            this.setState({})
+        }.bind(this)
+
         return (
             <div className="App" style={{padding: 10}}>
-                <input value={SELECTED_INDEX} onChange={this.handleSelectedIndexChange}/>
+                <input value={PADDING} onChange={changePadding}/>
                 <button onClick={this.refresh}>refresh</button>
                 <ListView
                     defaultSortDirection={0}
 
                     onSelectionChange={this.handleSelect}
-                    defaultSelected={SELECTED}
+                    defaultSelected={{}}
                     renderText={r}
+                    rowStyle={{padding: PADDING}}
                     evenRowStyle={{color: 'red'}}
                     data={data} title="React List View" style={style}/>
             </div>
