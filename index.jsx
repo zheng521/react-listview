@@ -115,6 +115,10 @@ var App = React.createClass({
             this.setState({})
         }.bind(this)
 
+        function up(item, index, props, event){
+            console.log(props.data[index])
+        }
+
         return (
             <div className="App" style={{padding: 10}}>
                 <input value={PADDING} onChange={changePadding}/>
@@ -123,10 +127,11 @@ var App = React.createClass({
                     defaultSortDirection={0}
 
                     onSelectionChange={this.handleSelect}
-                    defaultSelected={{}}
+                    xdefaultSelected={{}}
                     renderText={r}
                     rowStyle={{padding: PADDING}}
                     evenRowStyle={{color: 'red'}}
+                    onRowMouseUp={up}
                     data={data} title="React List View" style={style}/>
             </div>
         )

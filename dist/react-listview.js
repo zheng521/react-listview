@@ -65,8 +65,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Row = __webpack_require__(3)
 	var RowFactory = React.createFactory(Row)
 
-	var sorty     = __webpack_require__(11)
-	var assign    = __webpack_require__(12)
+	var sorty     = __webpack_require__(12)
+	var assign    = __webpack_require__(11)
 	var normalize = __webpack_require__(15)
 
 	var classes             = __webpack_require__(4)
@@ -484,6 +484,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    prepareBufferRowCount: function(props){
+
+	        if (props.bufferRowCount != null){
+	            return props.bufferRowCount
+	        }
+
 	        var rowHeight = this.prepareRowHeight(props)
 
 	        return props.bufferRowCount == null && rowHeight != null?
@@ -911,7 +916,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** @jsx React.DOM */'use strict';
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(12)
+	var assign = __webpack_require__(11)
 
 	module.exports = React.createClass({
 
@@ -945,7 +950,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** @jsx React.DOM */'use strict'
 
 	var React  = __webpack_require__(1)
-	var assign = __webpack_require__(12)
+	var assign = __webpack_require__(11)
 	var normalize = __webpack_require__(15)
 
 	var DISPLAY_NAME = 'ReactListView.Row'
@@ -1120,7 +1125,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var assign      = __webpack_require__(12)
+	var assign      = __webpack_require__(11)
 	var getSelected = __webpack_require__(6)
 	var hasOwn      = function(obj, prop){
 	    return Object.prototype.hasOwnProperty.call(obj, prop)
@@ -1356,7 +1361,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var assign    = __webpack_require__(12)
+	var assign    = __webpack_require__(11)
 	var normalize = __webpack_require__(15)
 
 	module.exports = {
@@ -1523,7 +1528,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var assign    = __webpack_require__(12)
+	var assign    = __webpack_require__(11)
 	var normalize = __webpack_require__(15)
 
 	function notEmpty(x){
@@ -1600,12 +1605,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(16)
-
-/***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
 	'use strict';
 
 	function ToObject(val) {
@@ -1633,6 +1632,12 @@ return /******/ (function(modules) { // webpackBootstrap
 		return to;
 	};
 
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(16)
 
 /***/ },
 /* 13 */

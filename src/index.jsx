@@ -428,6 +428,11 @@ module.exports = React.createClass({
     },
 
     prepareBufferRowCount: function(props){
+
+        if (props.bufferRowCount != null){
+            return props.bufferRowCount
+        }
+
         var rowHeight = this.prepareRowHeight(props)
 
         return props.bufferRowCount == null && rowHeight != null?
