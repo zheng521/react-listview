@@ -433,7 +433,9 @@ module.exports = React.createClass({
             return props.bufferRowCount
         }
 
-        MAX_SCREEN_SIZE  = MAX_SCREEN_SIZE  || Math.max(window.screen.height, window.screen.width)
+        var win = global.window? global.window: {screen: { width: 5000, height: 5000}}
+
+        MAX_SCREEN_SIZE  = MAX_SCREEN_SIZE  || Math.max(win.screen.height, win.screen.width)
         BUFFER_ROW_COUNT = BUFFER_ROW_COUNT || Math.ceil(MAX_SCREEN_SIZE / 12)
 
         var rowHeight = this.prepareRowHeight(props)
