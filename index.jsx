@@ -3,7 +3,7 @@
 var React = require('react')
 var ListView = require('./src')
 
-require('./index.styl')
+// require('./index.styl')
 
 var faker = require('faker');
 
